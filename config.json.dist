@@ -1,0 +1,8 @@
+{
+  "botToken": "BOT_TOKEN",
+  "socket": "wss://serey.io/wss",
+  "addressPrefix": "SRY",
+  "chainId": "3b9a062c4c1f4338f6932ec8bfc083d99369df7479467bbab1811976181b0daf",
+  "adminId": "CHAT_ID",
+  "chatId": "CHAT_ID"
+}

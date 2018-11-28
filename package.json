@@ -1,0 +1,34 @@
+{
+  "name": "serey_cp_support_bot",
+  "version": "0.1.0",
+  "description": "A Telegram bot, which vote for Serey posts made by Chain-Post system.",
+  "main": "bot.js",
+  "scripts": {
+    "test": "mocha",
+    "start": "node deploy.js && node bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:zavz9t/serey_cp_support_bot.git"
+  },
+  "keywords": [
+    "serey",
+    "telegram",
+    "votebot"
+  ],
+  "author": "Serhiy Walker <zavzyat@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "node-telegram-bot-api": "^0.30.0",
+    "@steemit/steem-js": "^0.7.2",
+    "sprintf-js": "^1.1.1",
+    "url-parse": "^1.4.4"
+  },
+  "devDependencies": {
+    "mocha": "^5.2.0",
+    "mock-require": "^3.0.2"
+  },
+  "engines": {
+    "node": "10.x"
+  }
+}
