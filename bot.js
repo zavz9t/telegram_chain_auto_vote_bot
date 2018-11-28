@@ -26,5 +26,5 @@ steem.api.streamOperations(`head`, function(err, operation) {
         return;
     }
 
-    bot.sendMessage(config.adminIdd, `New comment` + JSON.stringify(operation[1]));
+    bot.sendMessage(config.adminId, `New comment\n` + JSON.stringify(operation[1]));
 });
