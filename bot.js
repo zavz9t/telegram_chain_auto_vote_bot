@@ -22,9 +22,31 @@ steem.config.set(`chain_id`, config.chainId);
 
 
 steem.api.streamOperations(`head`, function(err, operation) {
-    if (operation[0] !== `comment`) {
+    if (err) {
+        console.error(err);
+
         return;
     }
 
-    bot.sendMessage(config.adminId, `New comment\n` + JSON.stringify(operation[1]));
+    // if (operation[0] === `comment`) {
+    //     bot.sendMessage(config.adminId, `2: New comment\n` + JSON.stringify(operation[1]));
+    // }
+    if (operation[0] !== `comment_options`) {
+        return;
+    }
+    if (!(`extensions` in operation[1]) || operation[1].extensions.length < 1) {
+        return;
+    }
+
+    for (let i in operation[1].extensions) {
+        let extension = operation[1].extensions[i][1];
+        if (!(`beneficiaries` in extension)) {
+            continue;
+        }
+        for (let k in extension.beneficiaries) {
+            if (extension.beneficiaries[k].account === `chain-post`) {
+                bot.sendMessage(config.adminId, `New comment options\n` + JSON.stringify(operation[1]));
+            }
+        }
+    }
 });
