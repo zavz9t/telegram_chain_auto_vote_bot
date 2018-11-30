@@ -21,6 +21,7 @@
   "dependencies": {
     "node-telegram-bot-api": "^0.30.0",
     "ioredis": "^4.2.0",
+    "@sentry/node": "^4.4.1",
     "@steemit/steem-js": "^0.7.2",
     "sprintf-js": "^1.1.1",
     "url-parse": "^1.4.4"

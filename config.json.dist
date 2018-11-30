@@ -1,5 +1,6 @@
 {
   "botToken": "BOT_TOKEN",
+  "sentryDsn": "SENTRY_DSN",
   "socket": "wss://serey.io/wss",
   "addressPrefix": "SRY",
   "chainId": "3b9a062c4c1f4338f6932ec8bfc083d99369df7479467bbab1811976181b0daf",

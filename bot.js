@@ -1,9 +1,15 @@
 'use strict';
 
 const TelegramBot = require(`node-telegram-bot-api`)
+    , Redis = require(`ioredis`)
+    , Sentry = require(`@sentry/node`)
     , steem = require(`@steemit/steem-js`)
     , config = require(`./config`)
 ;
+
+Sentry.init({ dsn: config.sentryDsn });
+
+const redis = new Redis(config.redisUrl);
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(config.botToken, { polling: true });
@@ -19,7 +25,6 @@ bot.on(`message`, (msg) => {
 steem.api.setOptions({ url: config.socket });
 steem.config.set(`address_prefix`, config.addressPrefix);
 steem.config.set(`chain_id`, config.chainId);
-
 
 steem.api.streamOperations(`head`, function(err, operation) {
     if (err) {
