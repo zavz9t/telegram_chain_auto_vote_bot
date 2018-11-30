@@ -3,8 +3,9 @@
 const TelegramBot = require(`node-telegram-bot-api`)
     , Redis = require(`ioredis`)
     , Sentry = require(`@sentry/node`)
-    , steem = require(`@steemit/steem-js`)
+    , chainAdapters = require(`blockchain-adapters-js`)
     , config = require(`./config`)
+    , Tool = require(`./tool`)
 ;
 
 Sentry.init({ dsn: config.sentryDsn });
@@ -21,21 +22,22 @@ bot.on(`message`, (msg) => {
     bot.sendMessage(msg.chat.id, 'Received your message');
 });
 
-
-steem.api.setOptions({ url: config.socket });
-steem.config.set(`address_prefix`, config.addressPrefix);
-steem.config.set(`chain_id`, config.chainId);
-
-steem.api.streamOperations(`head`, function(err, operation) {
+const sereyAdapter = chainAdapters.ChainAdapter.factory(chainAdapters.ChainConstant.SEREY);
+sereyAdapter.connection.api.streamOperations(function(err, operation) {
     if (err) {
         console.error(err);
 
         return;
     }
 
-    // if (operation[0] === `comment`) {
-    //     bot.sendMessage(config.adminId, `2: New comment\n` + JSON.stringify(operation[1]));
-    // }
+    // for test purpose
+    if (operation[0] === `comment` && operation[1].parent_permlink === ``) {
+        redis.sadd(Tool.buildRedisKey(`trash_` + operation[1].author), operation[1].permlink);
+
+        return;
+    }
+    // test end
+
     if (operation[0] !== `comment_options`) {
         return;
     }
@@ -49,8 +51,13 @@ steem.api.streamOperations(`head`, function(err, operation) {
             continue;
         }
         for (let k in extension.beneficiaries) {
-            if (extension.beneficiaries[k].account === `chain-post`) {
+            if (
+                extension.beneficiaries[k].account === config.supportUsername
+                && Number(extension.beneficiaries[k].weight) > config.supportMinPercent * 100
+            ) {
                 bot.sendMessage(config.adminId, `New comment options\n` + JSON.stringify(operation[1]));
+
+                redis.sadd(Tool.buildRedisKey(operation[1].author), operation[1].permlink);
             }
         }
     }
