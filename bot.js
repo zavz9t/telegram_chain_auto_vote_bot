@@ -36,6 +36,11 @@ sereyAdapter.connection.api.streamOperations(function(err, operation) {
 
         return;
     }
+    if (operation[0] === `comment` && operation[1].parent_permlink !== ``) {
+        redis.sadd(Tool.buildRedisKey(`trash_comm_` + operation[1].author), operation[1].permlink);
+
+        return;
+    }
     // test end
 
     if (operation[0] !== `comment_options`) {
