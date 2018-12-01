@@ -1,16 +1,13 @@
 'use strict';
 
 const TelegramBot = require(`node-telegram-bot-api`)
-    , Redis = require(`ioredis`)
     , Sentry = require(`@sentry/node`)
     , chainAdapters = require(`blockchain-adapters-js`)
     , config = require(`./config`)
-    , Tool = require(`./tool`)
+    , PostStorage = require(`./storage`)
 ;
 
 Sentry.init({ dsn: config.sentryDsn });
-
-const redis = new Redis(config.redisUrl);
 
 // Create a bot that uses 'polling' to fetch new updates
 const bot = new TelegramBot(config.botToken, { polling: true });
@@ -32,7 +29,9 @@ sereyAdapter.connection.api.streamOperations(function(err, operation) {
 
     // for test purpose
     if (operation[0] === `comment` && operation[1].parent_permlink === ``) {
-        redis.sadd(Tool.buildRedisKey(`trash_` + operation[1].author), operation[1].permlink);
+        PostStorage.save(operation[1].author, operation[1].permlink);
+
+        bot.sendMessage(config.adminId, `New post\n@` + operation[1].author + `/` + operation[1].permlink);
 
         return;
     }
@@ -57,7 +56,7 @@ sereyAdapter.connection.api.streamOperations(function(err, operation) {
             ) {
                 bot.sendMessage(config.adminId, `New comment options\n` + JSON.stringify(operation[1]));
 
-                redis.sadd(Tool.buildRedisKey(operation[1].author), operation[1].permlink);
+                PostStorage.save(operation[1].author, operation[1].permlink);
             }
         }
     }
