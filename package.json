@@ -19,7 +19,7 @@
   "license": "MIT",
   "dependencies": {
     "@sentry/node": "^4.4.1",
-    "blockchain-adapters-js": "github:zavz9t/blockchain-adapters-js#master",
+    "blockchain-adapters-js": "github:zavz9t/chain-tools-js#master",
     "ioredis": "^4.2.0",
     "node-telegram-bot-api": "^0.30.0",
     "sprintf-js": "^1.1.1",

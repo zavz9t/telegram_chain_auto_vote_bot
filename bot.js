@@ -28,10 +28,10 @@ sereyAdapter.connection.api.streamOperations(function(err, operation) {
     }
 
     // for test purpose
-    if (operation[0] === `comment` && operation[1].parent_permlink === ``) {
+    if (operation[0] === `comment` && operation[1].parent_author === ``) {
         PostStorage.save(operation[1].author, operation[1].permlink);
 
-        bot.sendMessage(config.adminId, `New post\n@` + operation[1].author + `/` + operation[1].permlink);
+        // bot.sendMessage(config.adminId, `New post\n@` + operation[1].author + `/` + operation[1].permlink);
 
         return;
     }
