@@ -2,7 +2,7 @@
 
 const TelegramBot = require(`node-telegram-bot-api`)
     , Sentry = require(`@sentry/node`)
-    , chainAdapters = require(`blockchain-adapters-js`)
+    , { ChainAdapter, ChainConstant } = require(`chain-tools-js`)
     , config = require(`./config`)
     , PostStorage = require(`./storage`)
 ;
@@ -19,7 +19,7 @@ bot.on(`message`, (msg) => {
     bot.sendMessage(msg.chat.id, 'Received your message');
 });
 
-const sereyAdapter = chainAdapters.ChainAdapter.factory(chainAdapters.ChainConstant.SEREY);
+const sereyAdapter = ChainAdapter.factory(ChainConstant.SEREY);
 sereyAdapter.connection.api.streamOperations(function(err, operation) {
     if (err) {
         console.error(err);
