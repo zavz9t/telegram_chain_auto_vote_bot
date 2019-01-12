@@ -1,34 +1,38 @@
 {
-  "name": "serey_cp_support_bot",
+  "name": "telegram_chain_auto_vote_bot",
   "version": "0.1.0",
-  "description": "A Telegram bot, which vote for Serey posts made by Chain-Post system.",
+  "description": "A Telegram bot, which automatically votes for Posts at configured BlockChain.",
   "scripts": {
-    "test": "mocha",
-    "start": "node deploy.js && node bot.js"
+    "test": "NODE_ENV=test NODE_PATH=$PWD mocha --recursive -r chai/register-should",
+    "start": "NODE_ENV=dev NODE_PATH=$PWD node bot.js",
+    "postinstall": "npm update && node deploy.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com:zavz9t/serey_cp_support_bot.git"
+    "url": "git+ssh://git@github.com:zavz9t/telegram_chain_auto_vote_bot.git"
   },
   "keywords": [
-    "serey",
     "telegram",
-    "votebot"
+    "blockchain",
+    "autovote"
   ],
   "author": "Serhiy Walker <zavzyat@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@sentry/node": "^4.4.1",
-    "blockchain-adapters-js": "github:zavz9t/chain-tools-js#master",
-    "ioredis": "^4.2.0",
+    "@sentry/node": "^4.5.0",
+    "chain-tools-js": "github:zavz9t/chain-tools-js",
+    "ioredis": "^4.3.0",
+    "moment": "^2.23.0",
     "node-telegram-bot-api": "^0.30.0",
-    "sprintf-js": "^1.1.1",
-    "url-parse": "^1.4.4",
-    "moment": "^2.22.2"
+    "sprintf-js": "^1.1.2",
+    "url-parse": "^1.4.4"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
+    "faker": "^4.1.0",
     "mocha": "^5.2.0",
-    "mock-require": "^3.0.2"
+    "mock-require": "^3.0.2",
+    "sinon": "^7.2.2"
   },
   "engines": {
     "node": "10.x"
