@@ -1,2 +1,3 @@
-# serey_cp_support_bot
-Telegram bot which supports Weku posts made by CP system
+# Telegram BlockChain AutoVote bot
+
+Telegram bot for automatically upvote Posts of specified users in configured BlockChain

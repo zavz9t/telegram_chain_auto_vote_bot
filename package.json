@@ -4,8 +4,7 @@
   "description": "A Telegram bot, which automatically votes for Posts at configured BlockChain.",
   "scripts": {
     "test": "NODE_ENV=test NODE_PATH=$PWD mocha --recursive -r chai/register-should",
-    "start": "NODE_ENV=dev NODE_PATH=$PWD node bot.js",
-    "postinstall": "npm update && node deploy.js"
+    "start": "NODE_ENV=dev NODE_PATH=$PWD node bot.js"
   },
   "repository": {
     "type": "git",
@@ -19,7 +18,7 @@
   "author": "Serhiy Walker <zavzyat@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@sentry/node": "^4.5.0",
+    "@sentry/node": "^4.5.2",
     "chain-tools-js": "github:zavz9t/chain-tools-js",
     "ioredis": "^4.3.0",
     "moment": "^2.23.0",
@@ -31,7 +30,7 @@
     "chai": "^4.2.0",
     "faker": "^4.1.0",
     "mocha": "^5.2.0",
-    "mock-require": "^3.0.2",
+    "mock-require": "^3.0.3",
     "sinon": "^7.2.2"
   },
   "engines": {

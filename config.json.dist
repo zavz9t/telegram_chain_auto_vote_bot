@@ -1,9 +1,9 @@
 {
-  "botToken": "BOT_TOKEN",
-  "sentryDsn": "SENTRY_DSN",
-  "adminId": "CHAT_ID",
-  "chatId": "CHAT_ID",
-  "redisUrl": "REDIS_URL",
-  "supportUsername": "chain-post",
-  "supportMinPercent": 5
+  "botToken": "$BOT_TOKEN",
+  "sentryDsn": "$SENTRY_DSN",
+  "adminId": "$CHAT_ID",
+  "chatId": "$CHAT_ID",
+  "redisUrl": "$REDIS_URL",
+  "weight": 100,
+  "minVp": 80
 }
