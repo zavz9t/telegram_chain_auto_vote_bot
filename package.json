@@ -21,10 +21,12 @@
     "@sentry/node": "^4.5.2",
     "chain-tools-js": "github:zavz9t/chain-tools-js",
     "ioredis": "^4.3.0",
+    "mongodb": "^3.1.12",
     "moment": "^2.23.0",
     "node-telegram-bot-api": "^0.30.0",
     "sprintf-js": "^1.1.2",
-    "url-parse": "^1.4.4"
+    "url-parse": "^1.4.4",
+    "hash.js": "^1.1.7"
   },
   "devDependencies": {
     "chai": "^4.2.0",

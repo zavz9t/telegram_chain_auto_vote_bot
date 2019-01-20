@@ -1,74 +1,77 @@
 'use strict';
 
 const faker = require(`faker`)
-    , { sprintf } = require(`sprintf-js`)
+    , sandbox = require(`sinon`).createSandbox()
     , fs = require(`fs`)
     , ConfigProvider = require(`../../config/ConfigProvider`)
-    , ConfigNotInitializedError = require(`../../config/ConfigNotInitializedError`)
-    , ConfigInvalidArgumentError = require(`../../config/ConfigInvalidArgumentError`)
+    , ConfigRedisAdapter = require(`../../config/ConfigRedisAdapter`)
     , ConfigParam = require(`../../config/ConfigParam`)
     , configPath = __dirname + `/runtime`
-    , configPathPattern = configPath + `/%s`
     , configDistFilePath = configPath + `/config.json.dist`
-    , configFilePath = configPath + `/config.json`
+    , configRuntimeFilename = `config.json`
+    , configRuntimeFilePath = configPath + `/` + configRuntimeFilename
 ;
 
 describe(`ConfigProvider`, () => {
 
     afterEach(() => {
+        // completely restore all fakes created through the sandbox
+        sandbox.restore();
+
         ConfigProvider.reset();
 
+        // delete all test specific files
         if (fs.existsSync(configDistFilePath)) {
             fs.unlinkSync(configDistFilePath);
         }
-        if (fs.existsSync(configFilePath)) {
-            fs.unlinkSync(configFilePath);
+        if (fs.existsSync(configRuntimeFilePath)) {
+            fs.unlinkSync(configRuntimeFilePath);
         }
     });
 
     describe(`init`, () => {
 
-        it(`should initialized without options`, () => {
+        it(`should initialized without options`, async () => {
             // given
 
             // when
-            ConfigProvider.init();
+            await ConfigProvider.init();
 
             // then
             // do it without errors
         });
 
-        it(`should throw exception if received "path" is not exists`, () => {
+        it(`should throw exception if received "path" is not exists`, async () => {
             // given
             let errorObj = null;
 
             // when
             try {
-                ConfigProvider.init({path: faker.random.alphaNumeric(8)});
+                await ConfigProvider.init({path: faker.random.alphaNumeric(8)});
             } catch (err) {
                 errorObj = err;
             }
 
             // then
-            errorObj.should.be.an.instanceof(ConfigInvalidArgumentError);
+            errorObj.should.be.an.instanceof(Error);
         });
 
-        it(`should throw exception if received "path" doesn't contain config file`, () => {
+        it(`should throw exception if received "path" doesn't contain config file`, async () => {
             // given
             let errorObj = null;
 
             // when
             try {
-                ConfigProvider.init({path: __dirname});
+                await ConfigProvider.init({path: __dirname});
             } catch (err) {
                 errorObj = err;
             }
 
             // then
-            errorObj.should.be.an.instanceof(ConfigInvalidArgumentError);
+            errorObj.should.be.an.instanceof(Error);
         });
 
-        it(`should init with custom "path"`, () => {
+        it(`should init with custom "path"`, async () => {
             // given
             const paramName = ConfigParam.WEIGHT
                 , paramValue = faker.random.number()
@@ -76,10 +79,10 @@ describe(`ConfigProvider`, () => {
             ;
             configData[paramName] = paramValue;
 
-            fs.writeFileSync(configDistFilePath, JSON.stringify(configData));
+            createConfigFiles(JSON.stringify(configData));
 
             // when
-            ConfigProvider.init({ path: configPath });
+            await ConfigProvider.init({ path: configPath });
             const resultValue = ConfigProvider.get(paramName);
 
             // then
@@ -89,11 +92,76 @@ describe(`ConfigProvider`, () => {
             );
         });
 
+        it(`should throw exception if "dist" config file is broken`, async () => {
+            // given
+            let errorObj = null;
+
+            createConfigFiles(faker.random.alphaNumeric(8));
+
+            // when
+            try {
+                await ConfigProvider.init({ path: configPath });
+            } catch (err) {
+                errorObj = err;
+            }
+
+            // then
+            errorObj.should.be.an.instanceof(Error);
+        });
+
+        it(`should not throw exception if "runtime" config file is broken`, async () => {
+            // given
+            let errorObj = null;
+
+            createConfigFiles(
+                JSON.stringify({ some: `data` })
+                , faker.random.alphaNumeric(8)
+            );
+
+            const mockConsole = sandbox.mock(console);
+            mockConsole.expects(`error`).once();
+
+            // when
+            try {
+                await ConfigProvider.init({ path: configPath });
+            } catch (err) {
+                errorObj = err;
+            }
+
+            // then
+            should.equal(errorObj, null);
+
+            mockConsole.verify();
+        });
+
+        it(`should load "runtime" config from Redis if it was configured`, async () => {
+            // given
+            const redisUrl = `redis://` + faker.random.alphaNumeric(7)
+                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
+                , mockRedis = sandbox.mock(ConfigRedisAdapter)
+            ;
+
+            stubRedis.get.resolves({});
+            mockRedis.expects(`instance`)
+                .once().withExactArgs(redisUrl)
+                .returns(stubRedis)
+            ;
+
+            createConfigFiles(JSON.stringify({ some: `data` }));
+
+            // when
+            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+
+            // then
+            mockRedis.verify();
+            sandbox.assert.calledOnce(stubRedis.get);
+        });
+
     });
 
     describe(`get`, () => {
 
-        it(`should throw error in Config was not initialized`, () => {
+        it(`should throw error in Config was not initialized`, async () => {
             // given
             const randomParameterName = faker.random.alphaNumeric(8);
             let errorObj = null;
@@ -106,34 +174,34 @@ describe(`ConfigProvider`, () => {
             }
 
             // then
-            errorObj.should.be.an.instanceof(ConfigNotInitializedError);
+            errorObj.should.be.an.instanceof(Error);
         });
 
-        it(`should return null for non existing parameter`, () => {
+        it(`should return null for non existing parameter`, async () => {
             // given
             const randomParameterName = faker.random.alphaNumeric(8);
 
             // when
-            ConfigProvider.init();
+            await ConfigProvider.init();
             const randomParameter = ConfigProvider.get(randomParameterName);
 
             // then
             should.equal(randomParameter, null, `NULL should be returned.`);
         });
 
-        it(`should return existing parameter`, () => {
+        it(`should return existing parameter`, async () => {
             // given
             const paramName = ConfigParam.WEIGHT;
 
             // when
-            ConfigProvider.init();
+            await ConfigProvider.init();
             const weight = ConfigProvider.get(paramName);
 
             // then
             should.exist(weight);
         });
 
-        it(`should override runtime config data over dist one`, () => {
+        it(`should override runtime config data over dist one`, async () => {
             // given
             const paramName = ConfigParam.WEIGHT
                 , paramValueDist = faker.random.number()
@@ -149,10 +217,12 @@ describe(`ConfigProvider`, () => {
             configDataDist[paramName] = paramValueDist;
             configData[paramName] = paramValue;
 
-            fs.writeFileSync(configDistFilePath, JSON.stringify(configDataDist));
-            fs.writeFileSync(configFilePath, JSON.stringify(configData));
+            createConfigFiles(
+                JSON.stringify(configDataDist)
+                , JSON.stringify(configData)
+            );
 
-            ConfigProvider.init({ path: configPath });
+            await ConfigProvider.init({ path: configPath });
 
             // when
             const resultValue = ConfigProvider.get(paramName);
@@ -164,7 +234,35 @@ describe(`ConfigProvider`, () => {
             );
         });
 
-        it(`should use ENV variables`, () => {
+        it(`should return "dist" value if "runtime" file broken`, async () => {
+            // given
+            const paramName = ConfigParam.WEIGHT
+                , paramValueDist = faker.random.number()
+                , configDataDist = {}
+            ;
+            configDataDist[paramName] = paramValueDist;
+
+            createConfigFiles(
+                JSON.stringify(configDataDist)
+                , faker.random.alphaNumeric(8)
+            );
+
+            // disable output of error message in test status
+            sandbox.stub(console, `error`);
+
+            await ConfigProvider.init({ path: configPath });
+
+            // when
+            const resultValue = ConfigProvider.get(paramName);
+
+            // then
+            resultValue.should.eql(
+                paramValueDist
+                , `ConfigProvider should get value from "dist" config.`
+            );
+        });
+
+        it(`should use ENV variables`, async () => {
             // given
             const paramName = ConfigParam.WEIGHT
                 , paramValue = faker.random.number()
@@ -176,9 +274,9 @@ describe(`ConfigProvider`, () => {
 
             configData[paramName] = `$` + paramEnvName;
 
-            fs.writeFileSync(configDistFilePath, JSON.stringify(configData));
+            createConfigFiles(JSON.stringify(configData));
 
-            ConfigProvider.init({ path: configPath });
+            await ConfigProvider.init({ path: configPath });
 
             // when
             const resultValue = ConfigProvider.get(paramName);
@@ -194,38 +292,118 @@ describe(`ConfigProvider`, () => {
 
     describe(`set`, () => {
 
-        it(`should update runtime config file`, () => {
+        it(`should update "runtime" config file and value of param by default`, async () => {
             // given
-            fs.writeFileSync(runtimeConfigFile, JSON.stringify({}));
+            const paramName = ConfigParam.WEIGHT
+                , paramValue = faker.random.number({ min: 0.01, max: 100 })
+                , mockFs = sandbox.mock(fs.promises)
+                , configData = {}
+            ;
+            configData[paramName] = paramValue;
+            createConfigFiles(JSON.stringify(configData));
 
-            const paramName = ConfigParameter.WEIGHT;
-            let paramNewValue = null;
+            let newParamValue = null;
             do {
-                paramNewValue = faker.random.number({min: 0.01, max: 100});
-            } while (ConfigProvider.get(paramName) === paramNewValue);
+                newParamValue = faker.random.number({ min: 0.01, max: 100 });
+            } while (newParamValue === paramValue);
+            configData[paramName] = newParamValue;
+
+            mockFs.expects(`writeFile`)
+                .once().withExactArgs(configRuntimeFilePath, JSON.stringify(configData))
+                .resolves(true)
+            ;
 
             // when
-            ConfigProvider.set(paramName, paramNewValue);
+            await ConfigProvider.init({ path: configPath });
+            await ConfigProvider.set(paramName, newParamValue);
 
             // then
             should.equal(
                 ConfigProvider.get(paramName)
-                , paramNewValue
+                , newParamValue
                 , `ConfigProvider should return new value of parameter`
             );
 
-            // check runtime file
-            setTimeout(() => {
-                const runtimeConfig = JSON.parse(fs.readFileSync(runtimeConfigFile, `utf8`));
-                should.have.property(runtimeConfig, paramName, `Runtime config file should have updated parameter key.`);
-                should.equal(
-                    runtimeConfig[paramName]
-                    , paramNewValue
-                    , `Runtime config file should contain new value of updated parameter.`
-                );
-            }, 500); // wait until file be updated
+            mockFs.verify();
+        });
+
+        it(`should not update random config param`, async () => {
+            // given
+            const paramName = faker.random.alphaNumeric(16)
+                , newParamValue = faker.random.number()
+                , mockFs = sandbox.mock(fs.promises)
+            ;
+            createConfigFiles(JSON.stringify({}));
+
+            mockFs.expects(`writeFile`).never();
+
+            // when
+            await ConfigProvider.init({ path: configPath });
+            await ConfigProvider.set(paramName, newParamValue);
+
+            // then
+            should.equal(
+                ConfigProvider.get(paramName)
+                , null
+                , `ConfigProvider should return "null" for non existing param.`
+            );
+
+            mockFs.verify();
+        });
+
+        it(`should use Redis for runtime config`, async () => {
+            // given
+            const paramName = ConfigParam.WEIGHT
+                , paramValue = faker.random.number({ min: 0.01, max: 100 })
+                , redisUrl = `redis://` + faker.random.alphaNumeric(7)
+                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
+                , mockRedis = sandbox.mock(ConfigRedisAdapter)
+                , mockFs = sandbox.mock(fs.promises)
+                , configData = {}
+            ;
+            configData[paramName] = paramValue;
+            createConfigFiles(JSON.stringify(configData));
+
+            let newParamValue = null;
+            do {
+                newParamValue = faker.random.number({ min: 0.01, max: 100 });
+            } while (newParamValue === paramValue);
+            configData[paramName] = newParamValue;
+
+            mockFs.expects(`writeFile`).never();
+
+            stubRedis.get.resolves({});
+            stubRedis.set.resolves();
+            mockRedis.expects(`instance`)
+                .once().withExactArgs(redisUrl)
+                .returns(stubRedis)
+            ;
+
+            // when
+            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+            await ConfigProvider.set(paramName, newParamValue);
+
+            // then
+            should.equal(
+                ConfigProvider.get(paramName)
+                , newParamValue
+                , `ConfigProvider should return new value of parameter`
+            );
+
+            mockFs.verify();
+
+            sandbox.assert.calledOnce(stubRedis.get);
+            sandbox.assert.calledOnce(stubRedis.set);
+            sandbox.assert.calledWithExactly(stubRedis.set, configData)
         });
 
     });
 
 });
+
+function createConfigFiles(distConfig, runtimeConfig = null) {
+    fs.writeFileSync(configDistFilePath, distConfig);
+    if (null !== runtimeConfig) {
+        fs.writeFileSync(configRuntimeFilePath, runtimeConfig);
+    }
+}
