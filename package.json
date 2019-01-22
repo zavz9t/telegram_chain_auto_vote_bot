@@ -4,7 +4,8 @@
   "description": "A Telegram bot, which automatically votes for Posts at configured BlockChain.",
   "scripts": {
     "test": "NODE_ENV=test NODE_PATH=$PWD mocha --recursive -r chai/register-should",
-    "start": "NODE_ENV=dev NODE_PATH=$PWD node bot.js"
+    "start": "NODE_ENV=dev NODE_PATH=$PWD node t.js",
+    "bot": "NODE_ENV=dev NODE_PATH=$PWD node bot.js"
   },
   "repository": {
     "type": "git",
@@ -26,7 +27,8 @@
     "node-telegram-bot-api": "^0.30.0",
     "sprintf-js": "^1.1.2",
     "url-parse": "^1.4.4",
-    "hash.js": "^1.1.7"
+    "hash.js": "^1.1.7",
+    "eventemitter3": "^3.1.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",

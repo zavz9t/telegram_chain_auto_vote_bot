@@ -26,4 +26,13 @@ module.exports = class Tool {
             , message
         );
     }
+
+    /**
+     * Handles errors which was not supported at system workflow
+     * @param {Error} err
+     * @param {string} message
+     */
+    static handleUnsupportedError(err, message) {
+        console.error(this.formatErrorMessage(message) + `\n`, err);
+    }
 };

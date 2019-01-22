@@ -123,20 +123,20 @@ module.exports = class ConfigProvider {
      * @return Promise<void>
      */
     static async [_load]() {
-        const configClass = this;
-
         return fileAdapter.get()
             .then((configData) => {
                 runtimeConfig = configData;
             })
             .then(() => {
-            if (redisAdapter) {
-                return redisAdapter.get() || {};
-            } else {
-                return {};
-            }
+                if (redisAdapter) {
+                    return redisAdapter.get();
+                } else {
+                    return {};
+                }
             }).then((redisData) => {
-                runtimeConfig = Object.assign(runtimeConfig, redisData);
+                if (Object.keys(redisData).length) {
+                    runtimeConfig = Object.assign(runtimeConfig, redisData);
+                }
             })
         ;
     }

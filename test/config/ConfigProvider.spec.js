@@ -288,6 +288,82 @@ describe(`ConfigProvider`, () => {
             );
         });
 
+        it(`should return value from Redis if it configured`, async () => {
+            // given
+            const paramName = ConfigParam.WEIGHT
+                , paramValueDist = faker.random.number()
+                , configData = {}
+            ;
+            configData[paramName] = paramValueDist;
+
+            createConfigFiles(JSON.stringify(configData));
+
+            const redisUrl = `redis://` + faker.random.alphaNumeric(16)
+                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
+                , mockRedis = sandbox.mock(ConfigRedisAdapter)
+            ;
+
+            let paramValueRedis = null;
+            do {
+                paramValueRedis = faker.random.number();
+            } while (paramValueRedis === paramValueDist);
+            configData[paramName] = paramValueRedis;
+
+            stubRedis.get.resolves(configData);
+            mockRedis.expects(`instance`)
+                .once().withExactArgs(redisUrl)
+                .returns(stubRedis)
+            ;
+
+            // when
+            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+            const resultValue = ConfigProvider.get(paramName);
+
+            // then
+            resultValue.should.eql(
+                paramValueRedis
+                , `ConfigProvider should get value from "Redis" config.`
+            );
+
+            sandbox.assert.calledOnce(stubRedis.get);
+            sandbox.assert.notCalled(stubRedis.set);
+        });
+
+        it(`should return "dist" value if Redis return empty data`, async () => {
+            // given
+            const paramName = ConfigParam.WEIGHT
+                , paramValueDist = faker.random.number()
+                , configData = {}
+            ;
+            configData[paramName] = paramValueDist;
+
+            createConfigFiles(JSON.stringify(configData));
+
+            const redisUrl = `redis://` + faker.random.alphaNumeric(16)
+                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
+                , mockRedis = sandbox.mock(ConfigRedisAdapter)
+            ;
+
+            stubRedis.get.resolves({});
+            mockRedis.expects(`instance`)
+                .once().withExactArgs(redisUrl)
+                .returns(stubRedis)
+            ;
+
+            // when
+            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+            const resultValue = ConfigProvider.get(paramName);
+
+            // then
+            resultValue.should.eql(
+                paramValueDist
+                , `ConfigProvider should get value from "dist" config.`
+            );
+
+            sandbox.assert.calledOnce(stubRedis.get);
+            sandbox.assert.notCalled(stubRedis.set);
+        });
+
     });
 
     describe(`set`, () => {
@@ -394,7 +470,7 @@ describe(`ConfigProvider`, () => {
 
             sandbox.assert.calledOnce(stubRedis.get);
             sandbox.assert.calledOnce(stubRedis.set);
-            sandbox.assert.calledWithExactly(stubRedis.set, configData)
+            sandbox.assert.calledWithExactly(stubRedis.set, configData);
         });
 
     });

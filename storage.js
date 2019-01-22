@@ -2,7 +2,7 @@
 
 let Redis = require(`ioredis`)
     , config = require(`./config`)
-    , Tool = require(`./tool`)
+    , Tool = require(`./Tool`)
 ;
 
 const redis = new Redis(config.redisUrl);

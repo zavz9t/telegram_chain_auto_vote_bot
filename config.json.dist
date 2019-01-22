@@ -1,9 +1,9 @@
 {
   "botToken": "$BOT_TOKEN",
-  "sentryDsn": "$SENTRY_DSN",
-  "adminId": "$CHAT_ID",
-  "chatId": "$CHAT_ID",
   "redisUrl": "$REDIS_URL",
+  "sentryDsn": "$SENTRY_DSN",
+  "adminId": "$ADMIN_ID",
+  "commandPrefix": "/",
   "weight": 100,
   "minVp": 80
 }
