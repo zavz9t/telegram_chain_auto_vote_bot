@@ -1,8 +1,7 @@
 'use strict';
 
-const { sprintf } = require(`sprintf-js`)
-    , AbstractCommand = require(`./AbstractCommand`)
-    , Tool = require(`../Tool`)
+const AbstractCommand = require(`./AbstractCommand`)
+    , BotHelper = require(`../bot/BotHelper`)
     , messages = require(`../messages`)
 ;
 
@@ -26,14 +25,11 @@ module.exports = class HelpCommand extends AbstractCommand {
      * @inheritDoc
      */
     static run(params, channel) {
-        channel.sendMessage(messages.info)
-            .catch((err) => {
-                Tool.handleUnsupportedError(
-                    err
-                    , `Failed to send "/help" message to user.`
-                );
-            })
-        ;
+        BotHelper.processMessageSend(
+            channel
+            , messages.info
+            , `Failed to send "/help" message to user.`
+        );
     }
 
 };

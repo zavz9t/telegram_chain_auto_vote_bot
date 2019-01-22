@@ -22,7 +22,7 @@ module.exports = class TelegramChannel extends AbstractChannel {
      * @inheritDoc
      */
     getAuthorId() {
-        return this.message.from.id;
+        return this.message.from.id.toString();
     }
 
     /**
@@ -30,7 +30,7 @@ module.exports = class TelegramChannel extends AbstractChannel {
      * @returns {string}
      */
     getChatId() {
-        return this.message.chat.id;
+        return this.message.chat.id.toString();
     }
 
     /**

@@ -1,7 +1,10 @@
 'use strict';
 
 const EventEmitter = require(`eventemitter3`)
+    , { sprintf } = require(`sprintf-js`)
+    , AccessDeniedError = require(`../error/AccessDeniedError`)
     , AbstractChannel = require(`../bot/AbstractChannel`)
+    , SecurityHelper = require(`../SecurityHelper`)
 ;
 
 module.exports = class AbstractCommand {
@@ -23,6 +26,36 @@ module.exports = class AbstractCommand {
     }
 
     /**
+     * Returns required permission to execute command
+     *
+     * @return {string}
+     */
+    static getRequiredPermission() {
+        return SecurityHelper.PERMISSION_ANY;
+    }
+
+    /**
+     * Checks whether user has access to perform current command
+     * @param {Array}           params
+     * @param {AbstractChannel} channel
+     */
+    static accessCheck(params, channel) {
+        const userId = channel.getAuthorId();
+        if (
+            false === SecurityHelper.hasAccess(
+                userId
+                , this.getRequiredPermission()
+            )
+        ) {
+            throw new AccessDeniedError(sprintf(
+                `User (%s) has no access to perform "%s" command.`
+                , userId
+                , this.getName()
+            ));
+        }
+    }
+
+    /**
      * Runs command
      * @param {Array}           params
      * @param {AbstractChannel} channel
@@ -40,6 +73,7 @@ module.exports = class AbstractCommand {
         ;
 
         possibleEvents.forEach((eventName) => {
+            emitter.on(eventName, instance.accessCheck, instance);
             emitter.on(eventName, instance.run, instance);
         });
     }

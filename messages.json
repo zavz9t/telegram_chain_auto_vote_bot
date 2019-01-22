@@ -1,7 +1,7 @@
 {
   "info": "Some info message.",
   "systemError": "Oh My God, Bot has Found New Bug. Can you please try again after sometimes.\nOr write %s, if this error will repeat. Sorry and thank you.",
-  "permissionDenied": "Sorry <@%s>, you have no permission to execute `%s%s` command. You can ask the administrators for help.",
+  "accessDenied": "Sorry, but you have no permission to execute `%s%s` command. You can ask the administrators for help.",
   "unsupportedCommand": "Sorry, we don't support `%s%s` command. You can ask administrators to add a new command to the bot.",
   "configInfo": "<@%1$s> Using config command you can receive current config value of specified parameter `%2$sconfig (parameter)` or change it value `%2$sconfig (parameter) (new value)`. Be careful with this command :wink:\n\nParameters:\n\t**weight** \t\t\t- Weight of vote\n\t**minVp** \t\t\t- Minimum value of VP when bot will vote\n\t**minPostAge** - Minimum age of post to receive a vote\n\t**maxPostAge** - Maximum age of post to receive a vote",
   "configParameterValue": "<@%s> Current value of \"%s\" parameter is: %s",
