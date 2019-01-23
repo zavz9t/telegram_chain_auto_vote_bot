@@ -2,8 +2,8 @@
 
 const faker = require(`faker`)
     , sandbox = require(`sinon`).createSandbox()
-    , SecurityHelper = require(`../SecurityHelper`)
-    , { ConfigProvider, ConfigParam } = require(`../config/index`)
+    , SecurityHelper = require(`../../helper/SecurityHelper`)
+    , { ConfigProvider, ConfigParam } = require(`../../config/index`)
 ;
 
 describe(`SecurityHelper`, () => {

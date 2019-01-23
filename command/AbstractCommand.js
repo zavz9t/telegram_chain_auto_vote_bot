@@ -4,7 +4,7 @@ const EventEmitter = require(`eventemitter3`)
     , { sprintf } = require(`sprintf-js`)
     , AccessDeniedError = require(`../error/AccessDeniedError`)
     , AbstractChannel = require(`../bot/AbstractChannel`)
-    , SecurityHelper = require(`../SecurityHelper`)
+    , SecurityHelper = require(`../helper/SecurityHelper`)
 ;
 
 module.exports = class AbstractCommand {

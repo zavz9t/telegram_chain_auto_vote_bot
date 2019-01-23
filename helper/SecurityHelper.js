@@ -1,6 +1,6 @@
 'use strict';
 
-const { ConfigProvider, ConfigParam } = require(`./config/index`);
+const { ConfigProvider, ConfigParam } = require(`../config/index`);
 
 /**
  * @property {string} PERMISSION_ANY Any user can perform such actions
