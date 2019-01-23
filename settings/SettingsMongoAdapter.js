@@ -1,7 +1,6 @@
 'use strict';
 
-const sprintf = require(`sprintf-js`).sprintf
-    , { MongoClient } = require('mongodb')
+const { MongoClient } = require('mongodb')
     , hash = require(`hash.js`)
     , instances = {}
 ;
@@ -17,7 +16,6 @@ module.exports = class SettingsMongoAdapter {
      */
     constructor(url) {
         this.connUrl = url;
-        this.key = `config.json`;
         this.conn = null;
     }
 
@@ -35,6 +33,12 @@ module.exports = class SettingsMongoAdapter {
         return instances[urlHash];
     }
 
+    /**
+     * @return {Promise<void>}
+     */
+    async checkConnection() {
+        return this[_connect]().then(() => { });
+    }
 
     async get() {
         return {};
@@ -47,10 +51,10 @@ module.exports = class SettingsMongoAdapter {
 
     // private methods
 
+    /**
+     * @return {Promise<MongoClient>}
+     */
     [_connect]() {
-        if (this.conn) {
-            return;
-        }
-        this.conn = new Redis(this.connUrl);
+        return MongoClient.connect(this.connUrl);
     }
 };

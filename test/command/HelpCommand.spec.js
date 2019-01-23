@@ -55,7 +55,7 @@ describe(`HelpCommand`, () => {
         sandbox.assert.calledWithExactly(stubChannel.sendMessage, messages.info);
     });
 
-    it.only(`should print info message by "start" alias`, () => {
+    it(`should print info message by "start" alias`, () => {
         // given
         const stubChannel = sandbox.createStubInstance(TelegramChannel);
 

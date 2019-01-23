@@ -1,24 +1,24 @@
 'use strict';
 
 const Validator = require(`better-validator`)
-    , ConfigParam = require(`./ConfigParam`)
+    , SettingsParam = require(`./SettingsParam`)
 ;
 
 module.exports = class SettingsValidator {
 
     /**
-     * Validates received config parameter name and value
-     * @param {string} name  Name of config parameter.
-     * @param {*}      value New value for config parameter.
+     * Validates received parameter name and value
+     * @param {string} name  Name of parameter.
+     * @param {*}      value New value for parameter.
      *
      * @return {Array} List of errors, empty if all fine.
      */
     static validate(name, value) {
         switch (name) {
-            case ConfigParam.WEIGHT:
-                return SettingsValidator.validateWeight(value);
-            case ConfigParam.MIN_VP:
-                return SettingsValidator.validateMinVp(value);
+            case SettingsParam.WEIGHT:
+                return this.validateWeight(value);
+            case SettingsParam.MIN_VP:
+                return this.validateMinVp(value);
             default:
                 return [];
         }

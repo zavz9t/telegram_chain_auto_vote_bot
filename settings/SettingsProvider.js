@@ -1,18 +1,15 @@
 'use strict';
 
 const Tool = require(`../Tool`)
-    , FileAdapter = require(`./ConfigFileAdapter`)
-    , RedisAdapter = require(`./ConfigRedisAdapter`)
+    , SettingsParam = require(`./SettingsParam`)
+    , SettingsMongoAdapter = require(`./SettingsMongoAdapter`)
+    , ConfigProvider = require(`../config/ConfigProvider`)
 ;
 
 let runtimeConfig = {}
-    , redisAdapter = null
-    , fileAdapter = null
-    , configFilesPath = null
-    , configInitialized = false
+    , mongoAdapter = null
+    , initialized = false
 ;
-
-const envVariablePrefix = `$`;
 
 // private methods names
 const _checkInit = Symbol(`checkInit`)
@@ -26,37 +23,19 @@ const _checkInit = Symbol(`checkInit`)
 module.exports = class SettingsProvider {
 
     /**
-     * @param {{ path: (string|undefined), redis: (string|undefined) }} options Available options
-     *                          - path - specifies path where need to look config files
-     *                          - redis - specifies connection URL to Redis instance (stores system config updates)
+     * @param {{ mongo: string }} options
+     *                          - mongo - specifies connection URL to MongoDB instance
      * @return Promise<void>
      */
     static async init(options = {}) {
-        if (configInitialized) {
+        if (initialized) {
             // TODO: add warning? error?
             return;
         }
+        mongoAdapter = SettingsMongoAdapter.instance(options.mongo);
 
-        if (`path` in options) {
-            configFilesPath = options.path;
-        } else if (`NODE_PATH` in process.env) {
-            configFilesPath = process.env.NODE_PATH;
-        } else if (`PWD` in process.env) {
-            configFilesPath = process.env.PWD;
-        } else {
-            throw Error(Tool.formatErrorMessage(
-                `Failed to determine working config directory.`
-                    + ` Please specify "path" init option.`
-            ));
-        }
-        fileAdapter = FileAdapter.instance(configFilesPath);
-
-        if (`redis` in options) {
-            redisAdapter = RedisAdapter.instance(options.redis);
-        }
-
-        return this[_load]().then(() => {
-            configInitialized = true;
+        return mongoAdapter.checkConnection().then(() => {
+            initialized = true;
         });
     }
 
@@ -110,9 +89,9 @@ module.exports = class SettingsProvider {
      * @throws Error If class was not initialized
      */
     static [_checkInit]() {
-        if (false === configInitialized) {
+        if (false === initialized) {
             throw new Error(Tool.formatErrorMessage(
-                `Config was not initialized. Do it before usage.`
+                `Settings was not initialized. Do it before usage.`
             ));
         }
     }
@@ -139,27 +118,6 @@ module.exports = class SettingsProvider {
                 }
             })
         ;
-    }
-
-    /**
-     * Checks whether param is ENV key and process such case
-     * @param {*} paramValue
-     * @return {*} ENV value, or given value if there isn't such ENV key
-     */
-    static [_processEnvVariable](paramValue) {
-        if (
-            false === Boolean(paramValue)
-            || `string` !== typeof paramValue
-            || envVariablePrefix !== paramValue[0]
-        ) {
-            return paramValue;
-        }
-        const paramEnvKey = paramValue.substr(1);
-        if (paramEnvKey in process.env) {
-            return process.env[paramEnvKey];
-        } else {
-            return paramValue;
-        }
     }
 
     /**

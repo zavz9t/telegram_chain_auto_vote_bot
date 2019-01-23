@@ -1,6 +1,6 @@
 'use strict';
 
-const sprintf = require(`sprintf-js`).sprintf
+const { sprintf } = require(`sprintf-js`)
     , fs = require(`fs`)
     , fsPromises = fs.promises
     , hash = require(`hash.js`)
