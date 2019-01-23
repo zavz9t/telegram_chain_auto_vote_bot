@@ -8,7 +8,7 @@ const TelegramBot = require(`node-telegram-bot-api`)
     , TelegramChannel = require(`./bot/TelegramChannel`)
 ;
 
-ConfigProvider.init().then(() => {
+ConfigProvider.init({ redis: process.env.REDIS_URL }).then(() => {
     // Initialize error tracking tool
     const sentryDsn = ConfigProvider.get(ConfigParam.SENTRY_DSN);
     if (sentryDsn) {
