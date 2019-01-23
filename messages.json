@@ -1,8 +1,8 @@
 {
-  "info": "Some info message.",
   "systemError": "Oh My God, Bot has Found New Bug. Can you please try again after sometimes.\nOr write %s, if this error will repeat. Sorry and thank you.",
   "accessDenied": "Sorry, but you have no permission to execute `%s%s` command. You can ask the administrators for help.",
   "unsupportedCommand": "Sorry, we don't support `%s%s` command. You can ask administrators to add a new command to the bot.",
+  "info": "Hi!\nThis bot designed to vote for new posts of specified users in BlockChain.\nConfigure users which you want to support and receive notification about they new posts.",
   "configInfo": "Using config command you can receive current config value of specified parameter `%1$s%2$s (parameter)` or change it value `%1$s%2$s (parameter) (new value)`. Be careful with this command 😉\n\nParameters:\n\t**weight** \t\t\t- Weight of vote\n\t**minVp** \t\t\t- Minimum value of VP when bot will vote",
   "configParamValue": "Current value of \"%s\" parameter is: %s",
   "configParamValueError": "Wrong new value of \"%s\" parameter. Errors: %s",

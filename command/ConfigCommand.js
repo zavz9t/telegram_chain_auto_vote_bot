@@ -12,9 +12,9 @@ const { sprintf } = require(`sprintf-js`)
 ;
 
 // private methods
-const _parseParams = Symbol('parseParams');
+const _parseParams = Symbol(`parseParams`);
 
-module.exports = class extends AbstractCommand {
+module.exports = class ConfigCommand extends AbstractCommand {
 
     /**
      * @inheritDoc

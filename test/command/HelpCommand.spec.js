@@ -6,7 +6,6 @@ const faker = require(`faker`)
     , TelegramChannel = require(`../../bot/TelegramChannel`)
     , messages = require(`../../messages`)
     , commandName = `help`
-    , commandAlias = `info`
 ;
 
 describe(`HelpCommand`, () => {
@@ -38,7 +37,7 @@ describe(`HelpCommand`, () => {
         sandbox.assert.calledWithExactly(stubChannel.sendMessage, messages.info);
     });
 
-    it(`should print info message by alias`, () => {
+    it(`should print info message by "info" alias`, () => {
         // given
         const stubChannel = sandbox.createStubInstance(TelegramChannel);
 
@@ -47,7 +46,25 @@ describe(`HelpCommand`, () => {
         stubChannel.sendMessage.resolves(true);
 
         // when
-        CommandHandler.run(commandAlias, [], stubChannel);
+        CommandHandler.run(`info`, [], stubChannel);
+
+        // then
+        sandbox.assert.calledOnce(stubChannel.getAuthorId);
+        sandbox.assert.notCalled(stubChannel.getChatId);
+        sandbox.assert.calledOnce(stubChannel.sendMessage);
+        sandbox.assert.calledWithExactly(stubChannel.sendMessage, messages.info);
+    });
+
+    it.only(`should print info message by "start" alias`, () => {
+        // given
+        const stubChannel = sandbox.createStubInstance(TelegramChannel);
+
+        stubChannel.getAuthorId.returns(faker.random.number());
+        stubChannel.getChatId.returns(faker.random.number());
+        stubChannel.sendMessage.resolves(true);
+
+        // when
+        CommandHandler.run(`start`, [], stubChannel);
 
         // then
         sandbox.assert.calledOnce(stubChannel.getAuthorId);

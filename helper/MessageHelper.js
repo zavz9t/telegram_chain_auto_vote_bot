@@ -36,6 +36,13 @@ class MessageHelper {
     }
 
     /**
+     * @param {Object} options
+     */
+    static formatInfo(options = {}) {
+        return messages.info;
+    }
+
+    /**
      * @param {{ prefix: {string}, command: {string} }} options
      */
     static formatConfigInfo(options) {

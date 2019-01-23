@@ -2,11 +2,10 @@
 
 const AbstractCommand = require(`./AbstractCommand`)
     , BotHelper = require(`../bot/BotHelper`)
-    , messages = require(`../messages`)
+    , MessageHelper = require(`../helper/MessageHelper`)
 ;
 
 module.exports = class HelpCommand extends AbstractCommand {
-
     /**
      * @inheritDoc
      */
@@ -18,7 +17,7 @@ module.exports = class HelpCommand extends AbstractCommand {
      * @inheritDoc
      */
     static getAliases() {
-        return [`info`];
+        return [`info`, `start`];
     }
 
     /**
@@ -27,9 +26,8 @@ module.exports = class HelpCommand extends AbstractCommand {
     static run(params, channel) {
         BotHelper.processMessageSend(
             channel
-            , messages.info
+            , MessageHelper.formatInfo()
             , `Failed to send "/help" message to user.`
         );
     }
-
 };
