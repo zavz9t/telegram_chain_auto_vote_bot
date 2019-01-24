@@ -3,8 +3,8 @@
 const faker = require(`faker`)
     , sandbox = require(`sinon`).createSandbox()
     , fs = require(`fs`)
+    , Redis = require(`ioredis`)
     , ConfigProvider = require(`../../config/ConfigProvider`)
-    , ConfigRedisAdapter = require(`../../config/ConfigRedisAdapter`)
     , ConfigParam = require(`../../config/ConfigParam`)
     , configPath = __dirname + `/runtime`
     , configDistFilePath = configPath + `/config.json.dist`
@@ -134,27 +134,17 @@ describe(`ConfigProvider`, () => {
             mockConsole.verify();
         });
 
-        it(`should load "runtime" config from Redis if it was configured`, async () => {
+        it(`should init with "redis" option without Error`, async () => {
             // given
-            const redisUrl = `redis://` + faker.random.alphaNumeric(7)
-                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
-                , mockRedis = sandbox.mock(ConfigRedisAdapter)
-            ;
-
-            stubRedis.get.resolves({});
-            mockRedis.expects(`instance`)
-                .once().withExactArgs(redisUrl)
-                .returns(stubRedis)
-            ;
+            const stubRedis = sandbox.createStubInstance(Redis);
+            stubRedis.get.resolves(JSON.stringify({}));
 
             createConfigFiles(JSON.stringify({ some: `data` }));
 
             // when
-            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+            await ConfigProvider.init({ path: configPath, redis: stubRedis });
 
             // then
-            mockRedis.verify();
-            sandbox.assert.calledOnce(stubRedis.get);
         });
 
     });
@@ -298,25 +288,17 @@ describe(`ConfigProvider`, () => {
 
             createConfigFiles(JSON.stringify(configData));
 
-            const redisUrl = `redis://` + faker.random.alphaNumeric(16)
-                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
-                , mockRedis = sandbox.mock(ConfigRedisAdapter)
-            ;
-
             let paramValueRedis = null;
             do {
                 paramValueRedis = faker.random.number();
             } while (paramValueRedis === paramValueDist);
             configData[paramName] = paramValueRedis;
 
-            stubRedis.get.resolves(configData);
-            mockRedis.expects(`instance`)
-                .once().withExactArgs(redisUrl)
-                .returns(stubRedis)
-            ;
+            const stubRedis = sandbox.createStubInstance(Redis);
+            stubRedis.get.resolves(JSON.stringify(configData));
 
             // when
-            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+            await ConfigProvider.init({ path: configPath, redis: stubRedis });
             const resultValue = ConfigProvider.get(paramName);
 
             // then
@@ -339,19 +321,11 @@ describe(`ConfigProvider`, () => {
 
             createConfigFiles(JSON.stringify(configData));
 
-            const redisUrl = `redis://` + faker.random.alphaNumeric(16)
-                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
-                , mockRedis = sandbox.mock(ConfigRedisAdapter)
-            ;
-
-            stubRedis.get.resolves({});
-            mockRedis.expects(`instance`)
-                .once().withExactArgs(redisUrl)
-                .returns(stubRedis)
-            ;
+            const stubRedis = sandbox.createStubInstance(Redis);
+            stubRedis.get.resolves(JSON.stringify({}));
 
             // when
-            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+            await ConfigProvider.init({ path: configPath, redis: stubRedis });
             const resultValue = ConfigProvider.get(paramName);
 
             // then
@@ -431,9 +405,6 @@ describe(`ConfigProvider`, () => {
             // given
             const paramName = ConfigParam.WEIGHT
                 , paramValue = faker.random.number({ min: 0.01, max: 100 })
-                , redisUrl = `redis://` + faker.random.alphaNumeric(7)
-                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
-                , mockRedis = sandbox.mock(ConfigRedisAdapter)
                 , mockFs = sandbox.mock(fs.promises)
                 , configData = {}
             ;
@@ -448,15 +419,12 @@ describe(`ConfigProvider`, () => {
 
             mockFs.expects(`writeFile`).never();
 
-            stubRedis.get.resolves({});
+            const stubRedis = sandbox.createStubInstance(Redis);
+            stubRedis.get.resolves(JSON.stringify({}));
             stubRedis.set.resolves();
-            mockRedis.expects(`instance`)
-                .once().withExactArgs(redisUrl)
-                .returns(stubRedis)
-            ;
 
             // when
-            await ConfigProvider.init({ path: configPath, redis: redisUrl });
+            await ConfigProvider.init({ path: configPath, redis: stubRedis });
             await ConfigProvider.set(paramName, newParamValue);
 
             // then
@@ -470,7 +438,11 @@ describe(`ConfigProvider`, () => {
 
             sandbox.assert.calledOnce(stubRedis.get);
             sandbox.assert.calledOnce(stubRedis.set);
-            sandbox.assert.calledWithExactly(stubRedis.set, configData);
+            sandbox.assert.calledWithExactly(
+                stubRedis.set
+                , sandbox.match.typeOf(`string`)
+                , JSON.stringify(configData)
+            );
         });
 
     });

@@ -3,12 +3,23 @@
 const TelegramBot = require(`node-telegram-bot-api`)
     , Sentry = require(`@sentry/node`)
     , { ChainAdapter, ChainConstant } = require(`chain-tools-js`)
+    , RedisAdapter = require(`./lib/RedisAdapter`)
+    , MongoAdapter = require(`./lib/MongoAdapter`)
     , { ConfigParam, ConfigProvider } = require(`./config/index`)
+    , { SettingsParam, SettingsProvider } = require(`./settings/index`)
     , CommandHandler = require(`./command/CommandHandler`)
     , TelegramChannel = require(`./bot/TelegramChannel`)
 ;
 
-ConfigProvider.init({ redis: process.env.REDIS_URL }).then(() => {
+Promise.all([
+    RedisAdapter.init(process.env.REDIS_URL)
+    , MongoAdapter.init(process.env.MONGODB_URI)
+]).then(() => {
+    return Promise.all([
+        ConfigProvider.init({redis: RedisAdapter.getConnection()})
+        , SettingsProvider.init({ mongo: MongoAdapter.getConnection() })
+    ]);
+}).then(() => {
     // Initialize error tracking tool
     const sentryDsn = ConfigProvider.get(ConfigParam.SENTRY_DSN);
     if (sentryDsn) {
@@ -63,8 +74,9 @@ ConfigProvider.init({ redis: process.env.REDIS_URL }).then(() => {
     //     ;
     // });
 }).catch((err) => {
-    // If config failed to initialize we can't work
-    throw err;
+    console.log(err);
+
+    throw new Error(`\n\nFailed to initialize Config and/or Settings.\n\n`);
 });
 
 

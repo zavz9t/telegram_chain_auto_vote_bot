@@ -1,12 +1,14 @@
 'use strict';
 
-const Tool = require(`../Tool`)
+const { Db } = require(`mongodb`)
+    , Tool = require(`../Tool`)
     , SettingsParam = require(`./SettingsParam`)
     , SettingsMongoAdapter = require(`./SettingsMongoAdapter`)
     , ConfigProvider = require(`../config/ConfigProvider`)
 ;
 
-let runtimeConfig = {}
+let userId = null
+    , userSettings = {}
     , mongoAdapter = null
     , initialized = false
 ;
@@ -23,8 +25,8 @@ const _checkInit = Symbol(`checkInit`)
 module.exports = class SettingsProvider {
 
     /**
-     * @param {{ mongo: string }} options
-     *                          - mongo - specifies connection URL to MongoDB instance
+     * @param {{ mongo: Db }} options
+     *                          - mongo - specifies connection to MongoDB instance
      * @return Promise<void>
      */
     static async init(options = {}) {
@@ -32,37 +34,41 @@ module.exports = class SettingsProvider {
             // TODO: add warning? error?
             return;
         }
-        mongoAdapter = SettingsMongoAdapter.instance(options.mongo);
+        mongoAdapter = new SettingsMongoAdapter(options.mongo);
 
-        return mongoAdapter.checkConnection().then(() => {
-            initialized = true;
-        });
+        initialized = true;
     }
 
     /**
      * Totally resets all config data
      */
     static reset() {
-        runtimeConfig = {};
-        fileAdapter = null;
-        redisAdapter = null;
-        configInitialized = false;
+        initialized = false;
+        mongoAdapter = null;
+        userId = null;
+        userSettings = {};
     }
 
     /**
-     * Returns current value of config parameter
-     * @param {string} name Name of config parameter.
+     * Returns current value for parameter of user
+     * @param {string} userId Identifier of user
+     * @param {string|null} name Name of parameter
+     * @param {*|null} defaultValue Default value if we don't find data
      *
-     * @return {*|null} Value of config parameter or null if parameter doesn't exists.
+     * @return {Promise<*>} Value of parameter or list all user parameters if it name was not specified
      */
-    static get(name) {
-        SettingsProvider[_checkInit]();
+    static async get(userId, name = null, defaultValue = null) {
+        this[_checkInit]();
 
-        if (name in runtimeConfig) {
-            return this[_processEnvVariable](runtimeConfig[name]);
-        } else {
-            return null;
-        }
+        return mongoAdapter.get(userId).then((data) => {
+            return data;
+        });
+
+        // if (name in runtimeConfig) {
+        //     return this[_processEnvVariable](runtimeConfig[name]);
+        // } else {
+        //     return null;
+        // }
     }
 
     /**

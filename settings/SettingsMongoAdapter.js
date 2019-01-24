@@ -1,6 +1,6 @@
 'use strict';
 
-const { MongoClient } = require('mongodb')
+const { Db } = require(`mongodb`)
     , hash = require(`hash.js`)
     , instances = {}
 ;
@@ -9,52 +9,43 @@ const { MongoClient } = require('mongodb')
 const _connect = Symbol(`connect`)
 ;
 
-module.exports = class SettingsMongoAdapter {
+class SettingsMongoAdapter {
 
     /**
-     * @param {string} url
+     * @param {Db} conn Connection to Mongo Database
      */
-    constructor(url) {
-        this.connUrl = url;
-        this.conn = null;
-    }
-
-    /**
-     * @param {string} url
-     *
-     * @return {SettingsMongoAdapter}
-     */
-    static instance(url) {
-        const urlHash = hash.sha256().update(url).digest(`hex`);
-
-        if (false === (url in instances)) {
-            instances[urlHash] = new SettingsMongoAdapter(url);
-        }
-        return instances[urlHash];
-    }
-
-    /**
-     * @return {Promise<void>}
-     */
-    async checkConnection() {
-        return this[_connect]().then(() => { });
+    constructor(conn) {
+        this.conn = conn;
     }
 
     async get() {
-        return {};
+        return this[_connect]().then((client, smt) => {
+
+            console.log(smt);
+
+            const db = client.db();
+
+            console.log(db);
+
+            const collection = db.collection(`user`);
+            // Find some documents
+            collection.find({}).toArray(function(err, docs) {
+                console.log("Get the following errors");
+                console.log(err);
+                console.log("Found the following records");
+                console.log(docs);
+            });
+
+            client.close();
+
+            return { some: `data` };
+        });
     }
 
 
     async set(value) {
         return;
     }
+}
 
-    // private methods
-
-    /**
-     * @return {Promise<MongoClient>}
-     */
-    [_connect]() {
-        return MongoClient.connect(this.connUrl);
-    }
-};
+module.exports = SettingsMongoAdapter;

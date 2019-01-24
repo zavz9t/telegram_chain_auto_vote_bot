@@ -52,7 +52,7 @@ module.exports = class ConfigProvider {
         fileAdapter = FileAdapter.instance(configFilesPath);
 
         if (`redis` in options) {
-            redisAdapter = RedisAdapter.instance(options.redis);
+            redisAdapter = new RedisAdapter(options.redis);
         }
 
         return this[_load]().then(() => {
