@@ -1,6 +1,7 @@
 'use strict';
 
 const { Collection } = require(`mongodb`)
+    , Tool = require(`../Tool`)
 ;
 
 class SettingsMongoAdapter {
@@ -32,9 +33,27 @@ class SettingsMongoAdapter {
         ;
     }
 
-
-    async set(value) {
-        return;
+    /**
+     * @param {string} userId Unique identifier of user
+     * @param {Object} value User settings which need to store
+     *
+     * @return {Promise<number>} Number of updated rows
+     */
+    async set(userId, value) {
+        if (`_id` in value) {
+            return this.conn.updateOne({ _id: value[`_id`] }, { $set: value })
+                .then((result) => {
+                    return result.result.n;
+                });
+        } else {
+            return this.conn.insertOne(Tool.jsonCopy(
+                    value
+                    , { appId: this.appId, userId: userId }
+                ))
+                .then((result) => {
+                    return result.result.n;
+                });
+        }
     }
 }
 

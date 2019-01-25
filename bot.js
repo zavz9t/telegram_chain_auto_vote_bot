@@ -18,27 +18,13 @@ Promise.all([
     , MongoAdapter.init(process.env.MONGODB_URI)
 ]).then(() => {
     return Promise.all([
-        ConfigProvider.init({redis: RedisAdapter.getConnection()})
-        // , SettingsProvider.init({ mongo: MongoAdapter.getConnection() })
+        ConfigProvider.init({ redis: RedisAdapter.getConnection() })
+        , SettingsProvider.init({
+            mongo: MongoAdapter.getConnection().collection(`user`) // TODO : move it to config ???
+            , appId: process.env.BOT_USERNAME
+        })
     ]);
 }).then(() => {
-
-
-    // MongoAdapter.getConnection().collection(`user`)
-    //     .insertOne({ telegram_id: 3113 })
-    //     .then((result) => {
-    //         console.log(`\n\nresult of insert\n\n`);
-    //         console.log(result);
-
-            MongoAdapter.getConnection().collection(`user`).find().toArray().then((docs) => {
-                console.log(`\n\nFound docs\n\n`);
-                console.log(docs);
-                console.log(`\n\nFin\n\n`);
-            });
-        // });
-
-    return;
-
     // Initialize error tracking tool
     const sentryDsn = ConfigProvider.get(ConfigParam.SENTRY_DSN);
     if (sentryDsn) {
@@ -94,6 +80,8 @@ Promise.all([
     // });
 }).catch((err) => {
     console.log(err);
+
+    // TODO: add close Mongo and Redis connection
 
     throw new Error(`\n\nFailed to initialize Config and/or Settings.\n\n`);
 });

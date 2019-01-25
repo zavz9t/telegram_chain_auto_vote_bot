@@ -1,6 +1,7 @@
 'use strict';
 
-const Tool = require(`../Tool`)
+const Redis = require(`ioredis`)
+    , Tool = require(`../Tool`)
     , FileAdapter = require(`./ConfigFileAdapter`)
     , RedisAdapter = require(`./ConfigRedisAdapter`)
 ;
@@ -27,7 +28,7 @@ const _checkInit = Symbol(`checkInit`)
 class ConfigProvider {
 
     /**
-     * @param {{ path: (string|undefined), redis: (string|undefined) }} options Available options
+     * @param {{ path: (string|undefined), redis: (Redis|undefined) }} options Available options
      *                          - path - specifies path where need to look config files
      *                          - redis - specifies connection URL to Redis instance (stores system config updates)
      * @return Promise<void>
@@ -121,7 +122,7 @@ class ConfigProvider {
     /**
      * Loads config data from storage
      *
-     * @return Promise<void>
+     * @return {Promise<void>}
      */
     static async [_load]() {
         return fileAdapter.get()

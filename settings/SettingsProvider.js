@@ -67,13 +67,15 @@ module.exports = class SettingsProvider {
     static async get(userId, name = null, defaultValue = null) {
         this[_checkInit]();
 
-        if (userId.toString() === runtimeUserId) {
+        const userIdString = userId.toString();
+
+        if (userIdString === runtimeUserId) {
             return this[_buildGetResult](name, defaultValue);
         }
         const thisClass = this;
 
-        return mongoAdapter.get(userId).then((data) => {
-            runtimeUserId = userId.toString();
+        return mongoAdapter.get(userIdString).then((data) => {
+            runtimeUserId = userIdString;
             runtimeUserSettings = data;
 
             return thisClass[_buildGetResult](name, defaultValue);
@@ -81,19 +83,21 @@ module.exports = class SettingsProvider {
     }
 
     /**
-     * Changes value of config parameter
-     * @param {string} name  Name of config parameter.
-     * @param {*}      value New value for config parameter.
+     * Changes parameter value
+     * @param {string} userId Unique identifier of user
+     * @param {string} name Name of parameter
+     * @param {*}      value New value for specified parameter
      *
      * @return Promise<void>
      */
-    static async set(name, value) {
-        if (false === (name in runtimeConfig)) {
-            return;
-        }
-        runtimeConfig[name] = value;
+    static async set(userId, name, value) {
+        return this.get(userId)
+            .then((userSettings) => {
+                userSettings[name] = value;
 
-        return this[_dump]();
+                return mongoAdapter.set(userId.toString(), userSettings);
+            })
+        ;
     }
 
     // private methods

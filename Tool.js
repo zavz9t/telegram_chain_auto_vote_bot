@@ -35,4 +35,19 @@ module.exports = class Tool {
     static handleUnsupportedError(err, message) {
         console.error(this.formatErrorMessage(message) + `\n`, err);
     }
+
+    /**
+     * Performs coping of Object and merge it with all next provided Objects
+     * @param {Object} sourceObj
+     * @param {...Object} objects
+     *
+     * @return {Object}
+     */
+    static jsonCopy(sourceObj, ...objects) {
+        let destObj = JSON.parse(JSON.stringify(sourceObj));
+
+        destObj = Object.assign(destObj, ...objects);
+
+        return destObj;
+    }
 };

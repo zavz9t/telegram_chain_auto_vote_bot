@@ -3,12 +3,13 @@
 const faker = require(`faker`)
     , sandbox = require(`sinon`).createSandbox()
     , { Collection, Cursor } = require(`mongodb`)
+    , Tool = require(`../../Tool`)
     , { ConfigProvider } = require(`../../config/index`)
     , SettingsProvider = require(`../../settings/SettingsProvider`)
     , SettingsParam = require(`../../settings/SettingsParam`)
 ;
 
-describe.only(`SettingsProvider`, () => {
+describe(`SettingsProvider`, () => {
 
     afterEach(() => {
         // completely restore all fakes created through the sandbox
@@ -160,6 +161,7 @@ describe.only(`SettingsProvider`, () => {
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
+            assertChangeNotCalled(stubMongo);
         });
 
         it(`should query data from Mongo only once for same user parameters`, async () => {
@@ -189,6 +191,7 @@ describe.only(`SettingsProvider`, () => {
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
+            assertChangeNotCalled(stubMongo);
         });
 
         it(`should query data from Mongo for each user`, async () => {
@@ -196,7 +199,7 @@ describe.only(`SettingsProvider`, () => {
             const stubMongo = sandbox.createStubInstance(Collection)
                 , stubCursor = sandbox.createStubInstance(Cursor)
                 , appId = faker.random.alphaNumeric(8)
-                , userId1 = faker.random.number()
+                , userId1 = faker.random.number().toString()
                 , paramName = SettingsParam.WEIGHT
                 , paramValue1 = faker.random.number()
                 , userSettings1 = {}
@@ -208,7 +211,7 @@ describe.only(`SettingsProvider`, () => {
                 , paramValue2 = null
             ;
             do {
-                userId2 = faker.random.number();
+                userId2 = faker.random.number().toString();
             } while (userId2 === userId1);
             do {
                 paramValue2 = faker.random.number();
@@ -249,6 +252,8 @@ describe.only(`SettingsProvider`, () => {
                 stubMongo.find
                 , stubCursor.toArray
             );
+
+            assertChangeNotCalled(stubMongo);
         });
 
         it(`should return all user params if "paramName" not provided`, async () => {
@@ -269,6 +274,7 @@ describe.only(`SettingsProvider`, () => {
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
+            assertChangeNotCalled(stubMongo);
         });
 
         it(`should return null for non existing parameter`, async () => {
@@ -295,6 +301,7 @@ describe.only(`SettingsProvider`, () => {
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
+            assertChangeNotCalled(stubMongo);
         });
 
         it(`should return default value for non existing parameter`, async () => {
@@ -322,6 +329,7 @@ describe.only(`SettingsProvider`, () => {
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
+            assertChangeNotCalled(stubMongo);
         });
 
         it(`should return existing user parameter not default value`, async () => {
@@ -349,6 +357,7 @@ describe.only(`SettingsProvider`, () => {
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
+            assertChangeNotCalled(stubMongo);
         });
 
         it(`should not parse ENV variables format`, async () => {
@@ -376,119 +385,103 @@ describe.only(`SettingsProvider`, () => {
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
+            assertChangeNotCalled(stubMongo);
         });
 
     });
 
-    describe.skip(`set`, () => {
+    describe(`set`, () => {
 
-        it(`should update user Settings and store it in Mongo`, async () => {
+        it(`should change user Settings and insert it in Mongo for new data`, async () => {
             // given
-            const paramName = SettingsParam.WEIGHT
-                , paramValue = faker.random.number({ min: 0.01, max: 100 })
-                , userDataOld = {}
-                , userDataNew = {}
+            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData()
+                , paramName = SettingsParam.WEIGHT
             ;
-            userDataOld[paramName] = paramValue;
 
             let newParamValue = null;
             do {
                 newParamValue = faker.random.number({ min: 0.01, max: 100 });
-            } while (newParamValue === paramValue);
-            userDataNew[paramName] = newParamValue;
-
-            const stubMongo = sandbox.createStubInstance(Collection)
-                , appId = faker.random.alphaNumeric(8)
-            ;
+            } while (newParamValue === userSettings[paramName]);
 
             // when
-            await ConfigProvider.init({ path: configPath });
-            await ConfigProvider.set(paramName, newParamValue);
+            await SettingsProvider.set(userId, paramName, newParamValue);
 
             // then
             should.equal(
-                ConfigProvider.get(paramName)
+                await SettingsProvider.get(userId, paramName)
                 , newParamValue
-                , `ConfigProvider should return new value of parameter`
+                , `New value of param should be returned.`
             );
 
-            mockFs.verify();
-        });
-
-        it(`should not update random config param`, async () => {
-            // given
-            const paramName = faker.random.alphaNumeric(16)
-                , newParamValue = faker.random.number()
-                , mockFs = sandbox.mock(fs.promises)
-            ;
-            createConfigFiles(JSON.stringify({}));
-
-            mockFs.expects(`writeFile`).never();
-
-            // when
-            await ConfigProvider.init({ path: configPath });
-            await ConfigProvider.set(paramName, newParamValue);
-
-            // then
-            should.equal(
-                ConfigProvider.get(paramName)
-                , null
-                , `ConfigProvider should return "null" for non existing param.`
+            assertFindCall(
+                stubMongo
+                , stubCursor
+                , { appId: appId, userId: userId }
             );
 
-            mockFs.verify();
+            let userSettingsCheck = Tool.jsonCopy(
+                userSettings
+                , { appId: appId, userId: userId }
+            );
+            userSettingsCheck[paramName] = newParamValue;
+
+            sandbox.assert.notCalled(stubMongo.updateOne);
+            sandbox.assert.calledOnce(stubMongo.insertOne);
+            sandbox.assert.calledWithExactly(
+                stubMongo.insertOne
+                , userSettingsCheck
+            );
         });
 
-        it(`should use Redis for runtime config`, async () => {
+        it(`should change user Settings and update it in Mongo for existing data`, async () => {
             // given
-            const paramName = ConfigParam.WEIGHT
-                , paramValue = faker.random.number({ min: 0.01, max: 100 })
-                , redisUrl = `redis://` + faker.random.alphaNumeric(7)
-                , stubRedis = sandbox.createStubInstance(ConfigRedisAdapter)
-                , mockRedis = sandbox.mock(ConfigRedisAdapter)
-                , mockFs = sandbox.mock(fs.promises)
-                , configData = {}
+            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData(
+                    { _id: faker.random.alphaNumeric(24) }
+                )
+                , paramName = SettingsParam.WEIGHT
             ;
-            configData[paramName] = paramValue;
-            createConfigFiles(JSON.stringify(configData));
 
             let newParamValue = null;
             do {
                 newParamValue = faker.random.number({ min: 0.01, max: 100 });
-            } while (newParamValue === paramValue);
-            configData[paramName] = newParamValue;
-
-            mockFs.expects(`writeFile`).never();
-
-            stubRedis.get.resolves({});
-            stubRedis.set.resolves();
-            mockRedis.expects(`instance`)
-                .once().withExactArgs(redisUrl)
-                .returns(stubRedis)
-            ;
+            } while (newParamValue === userSettings[paramName]);
 
             // when
-            await ConfigProvider.init({ path: configPath, redis: redisUrl });
-            await ConfigProvider.set(paramName, newParamValue);
+            await SettingsProvider.set(userId, paramName, newParamValue);
 
             // then
             should.equal(
-                ConfigProvider.get(paramName)
+                await SettingsProvider.get(userId, paramName)
                 , newParamValue
-                , `ConfigProvider should return new value of parameter`
+                , `New value of param should be returned.`
             );
 
-            mockFs.verify();
+            assertFindCall(
+                stubMongo
+                , stubCursor
+                , { appId: appId, userId: userId }
+            );
 
-            sandbox.assert.calledOnce(stubRedis.get);
-            sandbox.assert.calledOnce(stubRedis.set);
-            sandbox.assert.calledWithExactly(stubRedis.set, configData);
+            userSettings[paramName] = newParamValue;
+
+            sandbox.assert.notCalled(stubMongo.insertOne);
+            sandbox.assert.calledOnce(stubMongo.updateOne);
+            sandbox.assert.calledWithExactly(
+                stubMongo.updateOne
+                , { _id: userSettings[`_id`] }
+                , { $set: userSettings }
+            );
         });
 
     });
 
 });
 
+/**
+ * @param {Object} requiredSettings
+ *
+ * @return {Promise<{appId: string, userId: string, userSettings: Object, stubMongo: Collection, stubCursor: Cursor}>}
+ */
 async function buildFakeData(requiredSettings = {}) {
     const stubMongo = sandbox.createStubInstance(Collection)
         , stubCursor = sandbox.createStubInstance(Cursor)
@@ -498,16 +491,20 @@ async function buildFakeData(requiredSettings = {}) {
     userSettings[SettingsParam.WEIGHT] = faker.random.number();
     userSettings[SettingsParam.MIN_VP] = faker.random.number();
 
-    userSettings = Object.assign(userSettings, requiredSettings);
+    userSettings = Tool.jsonCopy(userSettings, requiredSettings);
 
     stubMongo.find.returns(stubCursor);
+
+    stubMongo.insertOne.resolves({ result: { n: 1 } });
+    stubMongo.updateOne.resolves({ result: { n: 1 } });
+
     stubCursor.toArray.resolves([userSettings]);
 
     await SettingsProvider.init({ mongo: stubMongo, appId: appId });
 
     return {
         appId: appId
-        , userId: faker.random.number()
+        , userId: faker.random.number().toString()
         , userSettings: userSettings
         , stubMongo: stubMongo
         , stubCursor: stubCursor
@@ -519,4 +516,9 @@ function assertFindCall(stubMongo, stubCursor, findArg) {
     sandbox.assert.calledWithExactly(stubMongo.find, findArg);
     sandbox.assert.calledOnce(stubCursor.toArray);
     sandbox.assert.callOrder(stubMongo.find, stubCursor.toArray);
+}
+
+function assertChangeNotCalled(stubMongo) {
+    sandbox.assert.notCalled(stubMongo.insertOne);
+    sandbox.assert.notCalled(stubMongo.updateOne);
 }
