@@ -1,32 +1,31 @@
 'use strict';
 
-const { Db } = require(`mongodb`)
+const { Collection } = require(`mongodb`)
+    , { sprintf } = require(`sprintf-js`)
+    , Validator = require(`better-validator`)
     , Tool = require(`../Tool`)
     , SettingsParam = require(`./SettingsParam`)
     , SettingsMongoAdapter = require(`./SettingsMongoAdapter`)
-    , ConfigProvider = require(`../config/ConfigProvider`)
 ;
 
-let userId = null
-    , userSettings = {}
+let runtimeUserId = null
+    , runtimeUserSettings = {}
     , mongoAdapter = null
     , initialized = false
 ;
 
 // private methods names
 const _checkInit = Symbol(`checkInit`)
-    , _load = Symbol(`load`)
-    , _processEnvVariable = Symbol(`processEnvVariable`)
-    , _dump = Symbol(`dump`)
-    , _dumpToFile = Symbol(`dumpToFile`)
-    , _dumpToRedis = Symbol(`dumpToRedis`)
+    , _validateInitOptions = Symbol(`validateInitOptions`)
+    , _buildGetResult = Symbol(`buildGetResult`)
 ;
 
 module.exports = class SettingsProvider {
 
     /**
-     * @param {{ mongo: Db }} options
-     *                          - mongo - specifies connection to MongoDB instance
+     * @param {{ mongo: Collection, appId: string }} options
+     *                          - mongo - specifies MongoDB collection to store data
+     *                          - appId - specifies unique identifier of current application
      * @return Promise<void>
      */
     static async init(options = {}) {
@@ -34,7 +33,15 @@ module.exports = class SettingsProvider {
             // TODO: add warning? error?
             return;
         }
-        mongoAdapter = new SettingsMongoAdapter(options.mongo);
+        const errors = this[_validateInitOptions](options);
+        if (errors.length) {
+            throw new Error(sprintf(
+                `Init options of "SettingsProvider" not valid. Errors: %s`
+                , JSON.stringify(errors)
+            ));
+        }
+
+        mongoAdapter = new SettingsMongoAdapter(options.mongo, options.appId);
 
         initialized = true;
     }
@@ -45,8 +52,8 @@ module.exports = class SettingsProvider {
     static reset() {
         initialized = false;
         mongoAdapter = null;
-        userId = null;
-        userSettings = {};
+        runtimeUserId = null;
+        runtimeUserSettings = {};
     }
 
     /**
@@ -60,15 +67,17 @@ module.exports = class SettingsProvider {
     static async get(userId, name = null, defaultValue = null) {
         this[_checkInit]();
 
-        return mongoAdapter.get(userId).then((data) => {
-            return data;
-        });
+        if (userId.toString() === runtimeUserId) {
+            return this[_buildGetResult](name, defaultValue);
+        }
+        const thisClass = this;
 
-        // if (name in runtimeConfig) {
-        //     return this[_processEnvVariable](runtimeConfig[name]);
-        // } else {
-        //     return null;
-        // }
+        return mongoAdapter.get(userId).then((data) => {
+            runtimeUserId = userId.toString();
+            runtimeUserSettings = data;
+
+            return thisClass[_buildGetResult](name, defaultValue);
+        });
     }
 
     /**
@@ -90,6 +99,27 @@ module.exports = class SettingsProvider {
     // private methods
 
     /**
+     * @param {Object} options Init options to validate
+     *
+     * @return {Array} List of errors. Empty is all fine
+     */
+    static [_validateInitOptions](options) {
+        const validator = new Validator();
+
+        validator(options).required().isObject((obj) => {
+            obj(`mongo`).required().isObject();
+            validator(options.mongo instanceof Collection)
+                .display(`mongo instance Collection`)
+                .isBoolean().isEqual(true)
+            ;
+
+            obj(`appId`).required().isString().notEmpty();
+        });
+
+        return validator.run();
+    }
+
+    /**
      * Checks whether class was initialized or not
      *
      * @throws Error If class was not initialized
@@ -103,56 +133,20 @@ module.exports = class SettingsProvider {
     }
 
     /**
-     * Loads config data from storage
+     * Builds result value for "get" method
+     * @param {string|null} paramName Name of parameter which need to return or null - all params
+     * @param {*} defaultValue Default value which need to return if data not found
      *
-     * @return Promise<void>
+     * @return {*}
      */
-    static async [_load]() {
-        return fileAdapter.get()
-            .then((configData) => {
-                runtimeConfig = configData;
-            })
-            .then(() => {
-                if (redisAdapter) {
-                    return redisAdapter.get();
-                } else {
-                    return {};
-                }
-            }).then((redisData) => {
-                if (Object.keys(redisData).length) {
-                    runtimeConfig = Object.assign(runtimeConfig, redisData);
-                }
-            })
-        ;
-    }
-
-    /**
-     * Stores current version of "runtime" config to configured storage
-     * @return {Promise<void>}
-     */
-    static async [_dump]() {
-        if (redisAdapter) {
-            return this[_dumpToRedis]();
+    static [_buildGetResult](paramName, defaultValue) {
+        if (paramName) {
+            return paramName in runtimeUserSettings
+                ? runtimeUserSettings[paramName]
+                : defaultValue
+            ;
         } else {
-            return this[_dumpToFile]();
+            return runtimeUserSettings;
         }
-    }
-
-    /**
-     * Stores current version of config to the file
-     *
-     * @return {Promise<void>}
-     */
-    static async [_dumpToFile]() {
-        return fileAdapter.set(runtimeConfig);
-    }
-
-    /**
-     * Stores current version of config to Redis
-     *
-     * @return {Promise<void>}
-     */
-    static async [_dumpToRedis]() {
-        return redisAdapter.set(runtimeConfig);
     }
 };

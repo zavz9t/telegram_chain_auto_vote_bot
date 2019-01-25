@@ -262,7 +262,7 @@ describe(`ConfigProvider`, () => {
 
             process.env[paramEnvName] = paramValue;
 
-            configData[paramName] = `$` + paramEnvName;
+            configData[paramName] = ConfigProvider.ENV_VARIABLE_PREFIX + paramEnvName;
 
             createConfigFiles(JSON.stringify(configData));
 
@@ -270,6 +270,8 @@ describe(`ConfigProvider`, () => {
 
             // when
             const resultValue = ConfigProvider.get(paramName);
+
+            delete process.env[paramEnvName];
 
             // then
             resultValue.should.equal(

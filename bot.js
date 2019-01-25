@@ -11,15 +11,34 @@ const TelegramBot = require(`node-telegram-bot-api`)
     , TelegramChannel = require(`./bot/TelegramChannel`)
 ;
 
+// TODO : add some validation for ENV variables
+
 Promise.all([
     RedisAdapter.init(process.env.REDIS_URL)
     , MongoAdapter.init(process.env.MONGODB_URI)
 ]).then(() => {
     return Promise.all([
         ConfigProvider.init({redis: RedisAdapter.getConnection()})
-        , SettingsProvider.init({ mongo: MongoAdapter.getConnection() })
+        // , SettingsProvider.init({ mongo: MongoAdapter.getConnection() })
     ]);
 }).then(() => {
+
+
+    // MongoAdapter.getConnection().collection(`user`)
+    //     .insertOne({ telegram_id: 3113 })
+    //     .then((result) => {
+    //         console.log(`\n\nresult of insert\n\n`);
+    //         console.log(result);
+
+            MongoAdapter.getConnection().collection(`user`).find().toArray().then((docs) => {
+                console.log(`\n\nFound docs\n\n`);
+                console.log(docs);
+                console.log(`\n\nFin\n\n`);
+            });
+        // });
+
+    return;
+
     // Initialize error tracking tool
     const sentryDsn = ConfigProvider.get(ConfigParam.SENTRY_DSN);
     if (sentryDsn) {

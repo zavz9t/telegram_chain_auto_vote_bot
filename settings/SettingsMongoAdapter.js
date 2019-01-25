@@ -1,45 +1,35 @@
 'use strict';
 
-const { Db } = require(`mongodb`)
-    , hash = require(`hash.js`)
-    , instances = {}
-;
-
-// private methods names
-const _connect = Symbol(`connect`)
+const { Collection } = require(`mongodb`)
 ;
 
 class SettingsMongoAdapter {
 
     /**
-     * @param {Db} conn Connection to Mongo Database
+     * @param {Collection} conn Mongo Collection where need to store data
+     * @param {string} appId Unique identifier of current application
      */
-    constructor(conn) {
+    constructor(conn, appId) {
         this.conn = conn;
+        this.appId = appId.toString();
     }
 
-    async get() {
-        return this[_connect]().then((client, smt) => {
+    async get(userId) {
+        const thisInstance = this;
 
-            console.log(smt);
+        return thisInstance.conn.find({ appId: thisInstance.appId, userId: userId })
+            .toArray()
+            .then((docs) => {
 
-            const db = client.db();
+                if (0 === docs.length) {
+                    return {};
+                } else if (docs.length > 1) {
+                    // TODO: add some warning
+                }
 
-            console.log(db);
-
-            const collection = db.collection(`user`);
-            // Find some documents
-            collection.find({}).toArray(function(err, docs) {
-                console.log("Get the following errors");
-                console.log(err);
-                console.log("Found the following records");
-                console.log(docs);
-            });
-
-            client.close();
-
-            return { some: `data` };
-        });
+                return docs[0];
+            })
+        ;
     }
 
 

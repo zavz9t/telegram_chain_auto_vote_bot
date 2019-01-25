@@ -12,8 +12,6 @@ let runtimeConfig = {}
     , configInitialized = false
 ;
 
-const envVariablePrefix = `$`;
-
 // private methods names
 const _checkInit = Symbol(`checkInit`)
     , _load = Symbol(`load`)
@@ -23,7 +21,10 @@ const _checkInit = Symbol(`checkInit`)
     , _dumpToRedis = Symbol(`dumpToRedis`)
 ;
 
-module.exports = class ConfigProvider {
+/**
+ * @property {string} ENV_VARIABLE_PREFIX Prefix which indicates that param is ENV variable name
+ */
+class ConfigProvider {
 
     /**
      * @param {{ path: (string|undefined), redis: (string|undefined) }} options Available options
@@ -150,7 +151,7 @@ module.exports = class ConfigProvider {
         if (
             false === Boolean(paramValue)
             || `string` !== typeof paramValue
-            || envVariablePrefix !== paramValue[0]
+            || this.ENV_VARIABLE_PREFIX !== paramValue[0]
         ) {
             return paramValue;
         }
@@ -191,4 +192,8 @@ module.exports = class ConfigProvider {
     static async [_dumpToRedis]() {
         return redisAdapter.set(runtimeConfig);
     }
-};
+}
+
+ConfigProvider.ENV_VARIABLE_PREFIX = `$`;
+
+module.exports = ConfigProvider;
