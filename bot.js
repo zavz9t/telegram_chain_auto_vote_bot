@@ -48,16 +48,6 @@ Promise.all([
             , channel = new TelegramChannel(bot, msg)
         ;
 
-        // if (
-        //     message.channel instanceof Discord.DMChannel
-        //     && false === BotHelper.checkUserPermission(command, message)
-        // ) {
-        //     // only admins can send DM messages
-        //     BotHelper.sendMessage(message, messages.dmMessagesDeprecated);
-        //
-        //     return;
-        // }
-
         CommandHandler.run(command, params, channel);
     });
 

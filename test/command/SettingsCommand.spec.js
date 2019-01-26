@@ -2,15 +2,18 @@
 
 const faker = require(`faker`)
     , sandbox = require(`sinon`).createSandbox()
+    , { Collection, Cursor } = require(`mongodb`)
     , { ConfigProvider, ConfigParam } = require(`../../config/index`)
+    , { SettingsProvider, SettingsParam } = require(`../../settings/index`)
+    , SettingsMongoAdapter = require(`../../settings/SettingsMongoAdapter`)
     , CommandHandler = require(`../../command/CommandHandler`)
-    , ConfigCommand = require(`../../command/ConfigCommand`)
+    , SettingsCommand = require(`../../command/SettingsCommand`)
     , MessageHelper = require(`../../helper/MessageHelper`)
     , TestHelper = require(`../TestHelper`)
-    , commandName = ConfigCommand.getName()
+    , commandName = SettingsCommand.getName()
 ;
 
-describe(`ConfigCommand`, () => {
+describe(`SettingsCommand`, () => {
 
     before(async () => {
         CommandHandler.register();
@@ -22,34 +25,46 @@ describe(`ConfigCommand`, () => {
         sandbox.restore();
     });
 
-    it(`should check permission of user to use "config" command`, () => {
-        // given
-        const stubChannel = TestHelper.buildCommunicationChannelStub();
+    describe.only(`show user settings list`, () => {
 
-        const mockConfig = sandbox.mock(ConfigProvider);
-        mockConfig.expects(`set`).never();
+        it(`should print list with default options for new user`, (done) => {
+            // given
+            const userId = faker.random.number()
+                , stubChannel = TestHelper.buildCommunicationChannelStub(userId)
+                , mockSettings = sandbox.mock(SettingsProvider)
+                , defaultSettings = ConfigProvider.getUserLevelItems()
+            ;
 
-        // when
-        CommandHandler.run(commandName, [], stubChannel);
+            mockSettings.expects(`get`)
+                .once().withExactArgs(userId, null, defaultSettings)
+                .resolves(defaultSettings)
+            ;
+            mockSettings.expects(`set`).never();
 
-        // then
-        sandbox.assert.calledOnce(stubChannel.getAuthorId);
-        sandbox.assert.notCalled(stubChannel.getChatId);
-        sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(
-            stubChannel.sendMessage
-            , MessageHelper.formatAccessDenied({
-                prefix: ConfigProvider.get(ConfigParam.COMMAND_PREFIX)
-                , command: commandName
-            })
-        );
+            // when
+            CommandHandler.run(commandName, [], stubChannel);
 
-        mockConfig.verify();
+            // then
+            setTimeout(() => {
+                mockSettings.verify();
+
+                sandbox.assert.calledOnce(stubChannel.sendMessage);
+                sandbox.assert.calledWithExactly(
+                    stubChannel.sendMessage
+                    , MessageHelper.formatUserSettingsInfo({
+                        settings: defaultSettings
+                    })
+                );
+
+                done();
+            }, 100);
+        });
+
     });
 
     it(`should return info about command on no params`, () => {
         // given
-        const stubChannel = TestHelper.buildCommunicationChannelStub(
+        const stubChannel = getChannelStub(
             ConfigProvider.get(ConfigParam.ADMIN_ID)
         );
 
@@ -77,7 +92,7 @@ describe(`ConfigCommand`, () => {
     it(`should return value of config parameter if only it name given`, () => {
         // given
         const configParamName = ConfigParam.WEIGHT
-            , stubChannel = TestHelper.buildCommunicationChannelStub(
+            , stubChannel = getChannelStub(
                 ConfigProvider.get(ConfigParam.ADMIN_ID)
             )
         ;
@@ -105,7 +120,7 @@ describe(`ConfigCommand`, () => {
     it(`should return "null" as value of non existing param`, () => {
         // given
         const configParamName = faker.random.alphaNumeric(16)
-            , stubChannel = TestHelper.buildCommunicationChannelStub(
+            , stubChannel = getChannelStub(
                 ConfigProvider.get(ConfigParam.ADMIN_ID)
             )
         ;
@@ -130,13 +145,14 @@ describe(`ConfigCommand`, () => {
         mockConfig.verify();
     });
 
-    it(`should change value of config parameter`, (done) => {
+    it.skip(`should change value of config parameter`, () => {
         // TODO: This case use Promise under the hood, so I don't know how to test it...
         // given
         const configParamName = ConfigParam.WEIGHT
             , configParamValue = ConfigProvider.get(configParamName)
-            , adminId = ConfigProvider.get(ConfigParam.ADMIN_ID)
-            , stubChannel = TestHelper.buildCommunicationChannelStub(adminId)
+            , stubChannel = getChannelStub(
+                ConfigProvider.get(ConfigParam.ADMIN_ID)
+            )
         ;
 
         let configParamNewValue = null;
@@ -149,14 +165,6 @@ describe(`ConfigCommand`, () => {
             .once().withExactArgs(configParamName, configParamNewValue)
             .resolves(true)
         ;
-        mockConfig.expects(`get`)
-            .withExactArgs(configParamName)
-            .returns(configParamNewValue)
-        ;
-        mockConfig.expects(`get`)
-            .withExactArgs(ConfigParam.ADMIN_ID)
-            .returns(adminId)
-        ;
 
         // when
         CommandHandler.run(
@@ -166,22 +174,18 @@ describe(`ConfigCommand`, () => {
         );
 
         // then
-        setTimeout(() => {
-            mockConfig.verify();
+        sandbox.assert.calledOnce(stubChannel.getAuthorId);
+        sandbox.assert.notCalled(stubChannel.getChatId);
+        sandbox.assert.calledOnce(stubChannel.sendMessage);
+        sandbox.assert.calledWithExactly(
+            stubChannel.sendMessage
+            , MessageHelper.formatConfigParamValueChanged({
+                param: configParamName
+                , value: configParamNewValue
+            })
+        );
 
-            sandbox.assert.calledOnce(stubChannel.getAuthorId);
-            sandbox.assert.notCalled(stubChannel.getChatId);
-            sandbox.assert.calledOnce(stubChannel.sendMessage);
-            sandbox.assert.calledWithExactly(
-                stubChannel.sendMessage
-                , MessageHelper.formatConfigParamValueChanged({
-                    param: configParamName
-                    , value: configParamNewValue
-                })
-            );
-
-            done();
-        }, 100);
+        mockConfig.verify();
     });
 
     it(`should perform validation of new param value`, () => {
@@ -189,7 +193,7 @@ describe(`ConfigCommand`, () => {
         const configParamName = ConfigParam.WEIGHT
             , configParamValue = ConfigProvider.get(configParamName)
             , configParamNewValue = faker.random.word(`commerce.department`)
-            , stubChannel = TestHelper.buildCommunicationChannelStub(
+            , stubChannel = getChannelStub(
                 ConfigProvider.get(ConfigParam.ADMIN_ID)
             )
         ;

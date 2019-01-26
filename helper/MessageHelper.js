@@ -7,14 +7,18 @@ const { sprintf } = require(`sprintf-js`)
 class MessageHelper {
 
     /**
-     * @param {{ admin: {string} }} options
+     * @param {{ admin: string }} options
+     *
+     * @return {string}
      */
     static formatSystemError(options) {
         return sprintf(messages.systemError, options.admin);
     }
 
     /**
-     * @param {{ prefix: {string}, command: {string} }} options
+     * @param {{ prefix: string, command: string }} options
+     *
+     * @return {string}
      */
     static formatAccessDenied(options) {
         return sprintf(
@@ -25,7 +29,9 @@ class MessageHelper {
     }
 
     /**
-     * @param {{ prefix: {string}, command: {string} }} options
+     * @param {{ prefix: string, command: string }} options
+     *
+     * @return {string}
      */
     static formatUnsupportedCommand(options) {
         return sprintf(
@@ -37,13 +43,17 @@ class MessageHelper {
 
     /**
      * @param {Object} options
+     *
+     * @return {string}
      */
     static formatInfo(options = {}) {
         return messages.info;
     }
 
     /**
-     * @param {{ prefix: {string}, command: {string} }} options
+     * @param {{ prefix: string, command: string }} options
+     *
+     * @return {string}
      */
     static formatConfigInfo(options) {
         return sprintf(
@@ -54,7 +64,9 @@ class MessageHelper {
     }
 
     /**
-     * @param {{ param: {string}, value: {string} }} options
+     * @param {{ param: string, value: string }} options
+     *
+     * @return {string}
      */
     static formatConfigParamValue(options) {
         return sprintf(
@@ -65,7 +77,9 @@ class MessageHelper {
     }
 
     /**
-     * @param {{ param: {string}, value: {string} }} options
+     * @param {{ param: string, value: string }} options
+     *
+     * @return {string}
      */
     static formatConfigParamValueChanged(options) {
         return sprintf(
@@ -76,7 +90,9 @@ class MessageHelper {
     }
 
     /**
-     * @param {{ param: {string}, error: {string} }} options
+     * @param {{ param: string, error: string }} options
+     *
+     * @return {string}
      */
     static formatConfigParamValueError(options) {
         return sprintf(
@@ -84,6 +100,24 @@ class MessageHelper {
             , options.param
             , options.error
         );
+    }
+
+    /**
+     * @param {{ settings: Object }} options
+     *
+     * @return {string}
+     */
+    static formatUserSettingsInfo(options) {
+        const settingsLines = [];
+        for (let paramName in options.settings) {
+            settingsLines.push(sprintf(
+                messages.userSettingsInfoLine
+                , paramName
+                , options.settings[paramName]
+            ));
+        }
+
+        return sprintf(messages.userSettingsInfo, settingsLines.join(`\n`));
     }
 }
 

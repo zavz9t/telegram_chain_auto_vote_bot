@@ -4,8 +4,8 @@ let sprintf = require(`sprintf-js`).sprintf
     , moment = require(`moment`)
 ;
 
-module.exports = class Tool {
-    static buildRedisKey(username) {
+class Tool {
+    static buildRedisKey(username) { // TODO : remove it?
         return sprintf(
             `%s_%s`,
             moment().format(`YYYY-MM-DD`),
@@ -50,4 +50,26 @@ module.exports = class Tool {
 
         return destObj;
     }
-};
+
+    /**
+     * Checks whether given value is empty or not
+     * @param {*} value
+     *
+     * @return {boolean}
+     */
+    static isEmpty(value) {
+        if (null === value) {
+            return true;
+        }
+        switch (typeof value) {
+            case `object`:
+                return 0 === Object.keys(value).length;
+            // case `array`:
+            //     return 0 === value.length;
+            default:
+                return false === Boolean(value);
+        }
+    }
+}
+
+module.exports = Tool;

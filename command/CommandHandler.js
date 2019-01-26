@@ -8,6 +8,7 @@ const EventEmitter = require(`eventemitter3`)
     , MessageHelper = require(`../helper/MessageHelper`)
     , HelpCommand = require(`./HelpCommand`)
     , ConfigCommand = require(`./ConfigCommand`)
+    , SettingsCommand = require(`./SettingsCommand`)
 ;
 
 const commandEmitter = new EventEmitter();
@@ -22,6 +23,7 @@ module.exports = class CommandHandler {
         const commands = [
             HelpCommand
             , ConfigCommand
+            , SettingsCommand
         ];
         commands.forEach((command) => {
             command.register(commandEmitter);

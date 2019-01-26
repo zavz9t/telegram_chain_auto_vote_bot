@@ -100,4 +100,38 @@ describe(`Tool`, () => {
 
     });
 
+    describe(`isEmpty`, () => {
+
+        const dataProvider = {
+            "should return TRUE for empty string case": [``, true]
+            , "should return FALSE for non empty string case": [`some`, false]
+            , "should return TRUE for NULL case": [null, true]
+            , "should return TRUE for zero number": [0, true]
+            , "should return FALSE for zero number": [57, false]
+            , "should return FALSE for zero string": [`0`, false] // TODO : need to fix it?..
+            , "should return TRUE for empty Array": [[], true]
+            , "should return FALSE for Array with any number": [[0], false]
+            , "should return TRUE for empty Object": [{}, true]
+            , "should return FALSE for Object with any props": [{ some: 0 }, false]
+        };
+
+        for (let shouldMsg in dataProvider) {
+            const [checkValue, expectedResult] = dataProvider[shouldMsg];
+
+            it(shouldMsg, () => {
+                // given
+
+                // when
+                const result = Tool.isEmpty(checkValue);
+
+                // then
+                result.should.equal(
+                    expectedResult
+                    , `Result of check should be expected one.`
+                );
+            });
+        }
+
+    });
+
 });

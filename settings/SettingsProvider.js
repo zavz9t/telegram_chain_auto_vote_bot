@@ -93,6 +93,7 @@ module.exports = class SettingsProvider {
     static async set(userId, name, value) {
         return this.get(userId)
             .then((userSettings) => {
+                runtimeUserSettings[name] = value;
                 userSettings[name] = value;
 
                 return mongoAdapter.set(userId.toString(), userSettings);
@@ -150,7 +151,14 @@ module.exports = class SettingsProvider {
                 : defaultValue
             ;
         } else {
-            return runtimeUserSettings;
+            if (Tool.isEmpty(runtimeUserSettings)) {
+                return defaultValue;
+            }
+
+            return Tool.jsonCopy(
+                Tool.isEmpty(defaultValue) ? {} : defaultValue
+                , runtimeUserSettings
+            );
         }
     }
 };

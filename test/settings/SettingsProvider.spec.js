@@ -5,8 +5,8 @@ const faker = require(`faker`)
     , { Collection, Cursor } = require(`mongodb`)
     , Tool = require(`../../Tool`)
     , { ConfigProvider } = require(`../../config/index`)
-    , SettingsProvider = require(`../../settings/SettingsProvider`)
-    , SettingsParam = require(`../../settings/SettingsParam`)
+    , { SettingsProvider, SettingsParam } = require(`../../settings/index`)
+    , TestHelper = require(`../TestHelper`)
 ;
 
 describe(`SettingsProvider`, () => {
@@ -143,7 +143,13 @@ describe(`SettingsProvider`, () => {
 
         it(`should return existing user parameter`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData()
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                    , userSettings
+                } = await TestHelper.settingsBuildFakeData()
                 , paramName = SettingsParam.WEIGHT
             ;
 
@@ -156,17 +162,23 @@ describe(`SettingsProvider`, () => {
                 , `Should return correct value of param.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
         it(`should query data from Mongo only once for same user parameters`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData()
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                    , userSettings
+                } = await TestHelper.settingsBuildFakeData()
                 , paramName1 = SettingsParam.WEIGHT
                 , paramName2 = SettingsParam.MIN_VP
             ;
@@ -186,12 +198,12 @@ describe(`SettingsProvider`, () => {
                 , `Should return correct value of second param.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
         it(`should query data from Mongo for each user`, async () => {
@@ -253,33 +265,44 @@ describe(`SettingsProvider`, () => {
                 , stubCursor.toArray
             );
 
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
         it(`should return all user params if "paramName" not provided`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData();
+            const {
+                stubMongo
+                , stubCursor
+                , appId
+                , userId
+                , userSettings
+            } = await TestHelper.settingsBuildFakeData();
 
             // when
             const userReceivedSettings = await SettingsProvider.get(userId);
 
             // then
-            userReceivedSettings.should.equal(
+            userReceivedSettings.should.deep.equal(
                 userSettings
                 , `Should return correct user settings.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
         it(`should return null for non existing parameter`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId } = await buildFakeData()
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                } = await TestHelper.settingsBuildFakeData()
                 , paramNameRandom = faker.random.alphaNumeric(16)
             ;
 
@@ -296,17 +319,22 @@ describe(`SettingsProvider`, () => {
                 , `Should return NULL if param not exists.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
         it(`should return default value for non existing parameter`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId } = await buildFakeData()
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                } = await TestHelper.settingsBuildFakeData()
                 , paramNameRandom = faker.random.alphaNumeric(16)
                 , defaultValue = faker.random.alphaNumeric(32)
             ;
@@ -324,17 +352,23 @@ describe(`SettingsProvider`, () => {
                 , `Should return default value if param not exists.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
         it(`should return existing user parameter not default value`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData()
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                    , userSettings
+                } = await TestHelper.settingsBuildFakeData()
                 , paramName = SettingsParam.WEIGHT
                 , paramDefaultValue = faker.random.alphaNumeric(16)
             ;
@@ -352,12 +386,12 @@ describe(`SettingsProvider`, () => {
                 , `Should return correct value of param.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
         it(`should not parse ENV variables format`, async () => {
@@ -369,7 +403,12 @@ describe(`SettingsProvider`, () => {
             process.env[paramEnvName] = faker.random.number();
             userNewSettings[paramName] = ConfigProvider.ENV_VARIABLE_PREFIX + paramEnvName;
 
-            const { stubMongo, stubCursor, appId, userId } = await buildFakeData(userNewSettings);
+            const {
+                stubMongo
+                , stubCursor
+                , appId
+                , userId
+            } = await TestHelper.settingsBuildFakeData(userNewSettings);
 
             // when
             const userParamValue = await SettingsProvider.get(userId, paramName);
@@ -380,12 +419,122 @@ describe(`SettingsProvider`, () => {
                 , `Should return correct value of param.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
             );
-            assertChangeNotCalled(stubMongo);
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
+        });
+
+        it(`should return default value as all parameters if result is empty object`, async () => {
+            // given
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                } = await TestHelper.settingsBuildFakeData(null)
+                , defaultSettings = { some: `data`, second: `values` }
+            ;
+
+            // when
+            const userReceivedSettings = await SettingsProvider.get(
+                userId
+                , null
+                , defaultSettings
+            );
+
+            // then
+            userReceivedSettings.should.deep.equal(
+                defaultSettings
+                , `Should return default user settings.`
+            );
+
+            TestHelper.settingsAssertFindCall(
+                stubMongo
+                , stubCursor
+                , { appId: appId, userId: userId }
+            );
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
+        });
+
+        it(`should merge default value to all parameters case`, async () => {
+            // given
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                    , userSettings
+                } = await TestHelper.settingsBuildFakeData()
+                , defaultSettings = { some: `data`, second: `values` }
+            ;
+
+            // when
+            const userReceivedSettings = await SettingsProvider.get(
+                userId
+                , null
+                , defaultSettings
+            );
+
+            // then
+            userReceivedSettings.should.deep.include(
+                userSettings
+                , `Should return stored user settings.`
+            );
+            userReceivedSettings.should.deep.include(
+                defaultSettings
+                , `Should return merged default user settings.`
+            );
+
+            TestHelper.settingsAssertFindCall(
+                stubMongo
+                , stubCursor
+                , { appId: appId, userId: userId }
+            );
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
+        });
+
+        it(`should use stored values instead default ones in all parameters case`, async () => {
+            // given
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                    , userSettings
+                } = await TestHelper.settingsBuildFakeData()
+                , defaultSettings = {}
+                , paramName = SettingsParam.WEIGHT
+            ;
+            do {
+                defaultSettings[paramName] = faker.random.number();
+            } while (defaultSettings[paramName] === userSettings[paramName]);
+
+            // when
+            const userReceivedSettings = await SettingsProvider.get(
+                userId
+                , null
+                , defaultSettings
+            );
+
+            // then
+            userReceivedSettings.should.deep.equal(
+                userSettings
+                , `Should return stored user settings.`
+            );
+            userReceivedSettings.should.deep.not.include(
+                defaultSettings
+                , `Should not use default user settings instead stored one.`
+            );
+
+            TestHelper.settingsAssertFindCall(
+                stubMongo
+                , stubCursor
+                , { appId: appId, userId: userId }
+            );
+            TestHelper.settingsAssertChangeNotCalled(stubMongo);
         });
 
     });
@@ -394,7 +543,13 @@ describe(`SettingsProvider`, () => {
 
         it(`should change user Settings and insert it in Mongo for new data`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData()
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                    , userSettings
+                } = await TestHelper.settingsBuildFakeData()
                 , paramName = SettingsParam.WEIGHT
             ;
 
@@ -413,7 +568,7 @@ describe(`SettingsProvider`, () => {
                 , `New value of param should be returned.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
@@ -435,7 +590,13 @@ describe(`SettingsProvider`, () => {
 
         it(`should change user Settings and update it in Mongo for existing data`, async () => {
             // given
-            const { stubMongo, stubCursor, appId, userId, userSettings } = await buildFakeData(
+            const {
+                    stubMongo
+                    , stubCursor
+                    , appId
+                    , userId
+                    , userSettings
+                } = await TestHelper.settingsBuildFakeData(
                     { _id: faker.random.alphaNumeric(24) }
                 )
                 , paramName = SettingsParam.WEIGHT
@@ -456,7 +617,7 @@ describe(`SettingsProvider`, () => {
                 , `New value of param should be returned.`
             );
 
-            assertFindCall(
+            TestHelper.settingsAssertFindCall(
                 stubMongo
                 , stubCursor
                 , { appId: appId, userId: userId }
@@ -476,49 +637,3 @@ describe(`SettingsProvider`, () => {
     });
 
 });
-
-/**
- * @param {Object} requiredSettings
- *
- * @return {Promise<{appId: string, userId: string, userSettings: Object, stubMongo: Collection, stubCursor: Cursor}>}
- */
-async function buildFakeData(requiredSettings = {}) {
-    const stubMongo = sandbox.createStubInstance(Collection)
-        , stubCursor = sandbox.createStubInstance(Cursor)
-        , appId = faker.random.alphaNumeric(8)
-    ;
-    let userSettings = {};
-    userSettings[SettingsParam.WEIGHT] = faker.random.number();
-    userSettings[SettingsParam.MIN_VP] = faker.random.number();
-
-    userSettings = Tool.jsonCopy(userSettings, requiredSettings);
-
-    stubMongo.find.returns(stubCursor);
-
-    stubMongo.insertOne.resolves({ result: { n: 1 } });
-    stubMongo.updateOne.resolves({ result: { n: 1 } });
-
-    stubCursor.toArray.resolves([userSettings]);
-
-    await SettingsProvider.init({ mongo: stubMongo, appId: appId });
-
-    return {
-        appId: appId
-        , userId: faker.random.number().toString()
-        , userSettings: userSettings
-        , stubMongo: stubMongo
-        , stubCursor: stubCursor
-    }
-}
-
-function assertFindCall(stubMongo, stubCursor, findArg) {
-    sandbox.assert.calledOnce(stubMongo.find);
-    sandbox.assert.calledWithExactly(stubMongo.find, findArg);
-    sandbox.assert.calledOnce(stubCursor.toArray);
-    sandbox.assert.callOrder(stubMongo.find, stubCursor.toArray);
-}
-
-function assertChangeNotCalled(stubMongo) {
-    sandbox.assert.notCalled(stubMongo.insertOne);
-    sandbox.assert.notCalled(stubMongo.updateOne);
-}

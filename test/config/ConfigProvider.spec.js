@@ -342,6 +342,28 @@ describe(`ConfigProvider`, () => {
 
     });
 
+    describe(`getUserLevelItems`, () => {
+
+        it(`should return list of all items for users`, async () => {
+            // given
+            const expectedResult = {};
+            await ConfigProvider.init();
+
+            expectedResult[ConfigParam.WEIGHT] = ConfigProvider.get(ConfigParam.WEIGHT);
+            expectedResult[ConfigParam.MIN_VP] = ConfigProvider.get(ConfigParam.MIN_VP);
+
+            // when
+            const userConfig = ConfigProvider.getUserLevelItems();
+
+            // then
+            userConfig.should.deep.equal(
+                expectedResult
+                , `All user level items should be returned.`
+            );
+        });
+
+    });
+
     describe(`set`, () => {
 
         it(`should update "runtime" config file and value of param by default`, async () => {

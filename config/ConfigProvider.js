@@ -4,6 +4,7 @@ const Redis = require(`ioredis`)
     , Tool = require(`../Tool`)
     , FileAdapter = require(`./ConfigFileAdapter`)
     , RedisAdapter = require(`./ConfigRedisAdapter`)
+    , ConfigParam = require(`./ConfigParam`)
 ;
 
 let runtimeConfig = {}
@@ -86,6 +87,24 @@ class ConfigProvider {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns list of config parameters which intended for use at the user level
+     *
+     * @return {Object}
+     */
+    static getUserLevelItems() {
+        const thisClass = this
+            , items = {}
+            , userLevelParams = [ConfigParam.WEIGHT, ConfigParam.MIN_VP]
+        ;
+
+        userLevelParams.forEach((paramName) => {
+            items[paramName] = thisClass.get(paramName);
+        });
+
+        return items;
     }
 
     /**
