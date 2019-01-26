@@ -47,6 +47,18 @@ module.exports = class SettingsProvider {
     }
 
     /**
+     * Provides list of params which are only for internal usage
+     * @return {string[]}
+     */
+    static getInternalParamNames() {
+        return [
+            SettingsParam.DB_RECORD_ID
+            , SettingsParam.APP_ID
+            , SettingsParam.USER_ID
+        ];
+    }
+
+    /**
      * Totally resets all config data
      */
     static reset() {

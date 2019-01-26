@@ -2,13 +2,13 @@
 
 const faker = require(`faker`)
     , sandbox = require(`sinon`).createSandbox()
-    , { Collection, Cursor } = require(`mongodb`)
+    , { sprintf } = require(`sprintf-js`)
     , { ConfigProvider, ConfigParam } = require(`../../config/index`)
     , { SettingsProvider, SettingsParam } = require(`../../settings/index`)
-    , SettingsMongoAdapter = require(`../../settings/SettingsMongoAdapter`)
     , CommandHandler = require(`../../command/CommandHandler`)
     , SettingsCommand = require(`../../command/SettingsCommand`)
     , MessageHelper = require(`../../helper/MessageHelper`)
+    , Tool = require(`../../Tool`)
     , TestHelper = require(`../TestHelper`)
     , commandName = SettingsCommand.getName()
 ;
@@ -32,6 +32,7 @@ describe(`SettingsCommand`, () => {
             const userId = faker.random.number()
                 , stubChannel = TestHelper.buildCommunicationChannelStub(userId)
                 , mockSettings = sandbox.mock(SettingsProvider)
+                , mockConfig = sandbox.mock(ConfigProvider)
                 , defaultSettings = ConfigProvider.getUserLevelItems()
             ;
 
@@ -41,18 +42,32 @@ describe(`SettingsCommand`, () => {
             ;
             mockSettings.expects(`set`).never();
 
+            mockConfig.expects(`set`).never();
+
             // when
             CommandHandler.run(commandName, [], stubChannel);
 
             // then
             setTimeout(() => {
                 mockSettings.verify();
+                mockConfig.verify();
 
                 sandbox.assert.calledOnce(stubChannel.sendMessage);
                 sandbox.assert.calledWithExactly(
                     stubChannel.sendMessage
-                    , MessageHelper.formatUserSettingsInfo({
-                        settings: defaultSettings
+                    , sandbox.match(userMessage => {
+                        for (let paramName in defaultSettings) {
+                            userMessage.should.contain(
+                                paramName
+                                , sprintf(`User message should contain param "%s".`, paramName)
+                            );
+                            userMessage.should.contain(
+                                defaultSettings[paramName]
+                                , sprintf(`User message should contain param "%s" value.`, paramName)
+                            );
+                        }
+
+                        return true;
                     })
                 );
 
@@ -60,33 +75,118 @@ describe(`SettingsCommand`, () => {
             }, 100);
         });
 
-    });
+        it(`should print list of current user settings`, (done) => {
+            // given
+            const userId = faker.random.number()
+                , stubChannel = TestHelper.buildCommunicationChannelStub(userId)
+                , mockSettings = sandbox.mock(SettingsProvider)
+                , mockConfig = sandbox.mock(ConfigProvider)
+                , defaultSettings = ConfigProvider.getUserLevelItems()
+                , userSettings = Tool.jsonCopy(defaultSettings, { some: `setting` })
+            ;
 
-    it(`should return info about command on no params`, () => {
-        // given
-        const stubChannel = getChannelStub(
-            ConfigProvider.get(ConfigParam.ADMIN_ID)
-        );
+            mockSettings.expects(`get`)
+                .once().withExactArgs(userId, null, defaultSettings)
+                .resolves(userSettings)
+            ;
+            mockSettings.expects(`set`).never();
 
-        const mockConfig = sandbox.mock(ConfigProvider);
-        mockConfig.expects(`set`).never();
+            mockConfig.expects(`set`).never();
 
-        // when
-        CommandHandler.run(ConfigCommand.getName(), [], stubChannel);
+            // when
+            CommandHandler.run(commandName, [], stubChannel);
 
-        // then
-        sandbox.assert.calledOnce(stubChannel.getAuthorId);
-        sandbox.assert.notCalled(stubChannel.getChatId);
-        sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(
-            stubChannel.sendMessage
-            , MessageHelper.formatConfigInfo({
-                prefix: ConfigProvider.get(ConfigParam.COMMAND_PREFIX)
-                , command: commandName
-            })
-        );
+            // then
+            setTimeout(() => {
+                mockSettings.verify();
+                mockConfig.verify();
 
-        mockConfig.verify();
+                sandbox.assert.calledOnce(stubChannel.sendMessage);
+                sandbox.assert.calledWithExactly(
+                    stubChannel.sendMessage
+                    , sandbox.match(userMessage => {
+                        for (let paramName in userSettings) {
+                            userMessage.should.contain(
+                                paramName
+                                , sprintf(`User message should contain param "%s".`, paramName)
+                            );
+                            userMessage.should.contain(
+                                userSettings[paramName]
+                                , sprintf(`User message should contain param "%s" value.`, paramName)
+                            );
+                        }
+                        return true;
+                    })
+                );
+
+                done();
+            }, 100);
+        });
+
+        it(`should skip technical user settings in list`, (done) => {
+            // given
+            const userId = faker.random.number()
+                , stubChannel = TestHelper.buildCommunicationChannelStub(userId)
+                , mockSettings = sandbox.mock(SettingsProvider)
+                , mockConfig = sandbox.mock(ConfigProvider)
+                , defaultSettings = ConfigProvider.getUserLevelItems()
+                , userSettings = Tool.jsonCopy(
+                    defaultSettings
+                    , {
+                        _id: `some_identifier`
+                        , appId: `any_id`
+                        , userId: `identifier`
+                        , some: `param`
+                    }
+                )
+                , forbiddenParams = SettingsProvider.getInternalParamNames()
+            ;
+
+            mockSettings.expects(`get`)
+                .once().withExactArgs(userId, null, defaultSettings)
+                .resolves(userSettings)
+            ;
+            mockSettings.expects(`set`).never();
+
+            mockConfig.expects(`set`).never();
+
+            // when
+            CommandHandler.run(commandName, [], stubChannel);
+
+            // then
+            setTimeout(() => {
+                mockSettings.verify();
+                mockConfig.verify();
+
+                sandbox.assert.calledOnce(stubChannel.sendMessage);
+                sandbox.assert.calledWithExactly(
+                    stubChannel.sendMessage
+                    , sandbox.match(userMessage => {
+                        for (let paramName in userSettings) {
+                            if (forbiddenParams.includes(paramName)) {
+                                userMessage.should.not.contain(
+                                    paramName
+                                    , sprintf(`User message should not contain forbidden param "%s".`, paramName)
+                                );
+                            } else {
+                                userMessage.should.contain(
+                                    paramName
+                                    , sprintf(`User message should contain param "%s".`, paramName)
+                                );
+                                userMessage.should.contain(
+                                    userSettings[paramName]
+                                    , sprintf(`User message should contain param "%s" value.`, paramName)
+                                );
+                            }
+                        }
+                        return true;
+                    })
+                );
+
+                done();
+            }, 100);
+        });
+
     });
 
     it(`should return value of config parameter if only it name given`, () => {

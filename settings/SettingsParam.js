@@ -1,29 +1,18 @@
 'use strict';
 
 /**
- * Contains list of available parameters
- * @typedef {Object} SettingsParam
  * @property {string} WEIGHT Weight of vote
  * @property {string} MIN_VP Minimum value of VP when bot will perform vote.
+ * @property {string} DB_RECORD_ID Name of internal DB identifier of record
+ * @property {string} APP_ID Unique identifier of current application
+ * @property {string} USER_ID Unique identifier of user in communication app
  */
-const SettingsParam = {}
-    , parameterList = {
-        weight: `WEIGHT`
-        , minVp: `MIN_VP`
-    }
-;
+class SettingsParam { }
 
-for (let propValue in parameterList) {
-    Object.defineProperty(
-        SettingsParam
-        , parameterList[propValue]
-        , {
-            value: propValue
-            , writable: false
-            , enumerable: true
-            , configurable : false
-        }
-    );
-}
+SettingsParam.WEIGHT = `weight`;
+SettingsParam.MIN_VP = `minVp`;
+SettingsParam.DB_RECORD_ID = `_id`;
+SettingsParam.APP_ID = `appId`;
+SettingsParam.USER_ID = `userId`;
 
 module.exports = SettingsParam;

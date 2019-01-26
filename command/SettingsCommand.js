@@ -73,12 +73,27 @@ class SettingsCommand extends AbstractCommand {
      * @param {string[]} params
      * @param {string} userId Identifier of current user
      *
-     * @return {string|null} Detailed information about command, or null - another case
+     * @return {Promise<string|null>} List of user current settings, or null - another case
      */
     static async [_infoMessageCase](params, userId) {
         if (params.length === 0) {
+            const userSettings = await SettingsProvider.get(
+                    userId
+                    , null
+                    , ConfigProvider.getUserLevelItems()
+                )
+                , internalParams = SettingsProvider.getInternalParamNames()
+            ;
+            const filteredSettings = Object.keys(userSettings)
+                .filter(key => false === internalParams.includes(key))
+                .reduce((obj, key) => {
+                    obj[key] = userSettings[key];
+
+                    return obj;
+                }, {});
+
             return MessageHelper.formatUserSettingsInfo({
-                settings: await SettingsProvider.get(userId, null, ConfigProvider.getUserLevelItems())
+                settings: filteredSettings
             });
         } else {
             return null;

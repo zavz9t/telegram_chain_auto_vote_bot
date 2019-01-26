@@ -131,7 +131,6 @@ describe(`ConfigCommand`, () => {
     });
 
     it(`should change value of config parameter`, (done) => {
-        // TODO: This case use Promise under the hood, so I don't know how to test it...
         // given
         const configParamName = ConfigParam.WEIGHT
             , configParamValue = ConfigProvider.get(configParamName)
