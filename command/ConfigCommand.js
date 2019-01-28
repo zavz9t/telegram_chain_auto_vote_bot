@@ -20,7 +20,7 @@ module.exports = class ConfigCommand extends AbstractCommand {
      * @inheritDoc
      */
     static getName() {
-        return `config`;
+        return `/config`;
     }
 
     /**
@@ -37,10 +37,7 @@ module.exports = class ConfigCommand extends AbstractCommand {
      */
     static infoMessageCase(params) {
         if (params.length === 0) {
-            return MessageHelper.formatConfigInfo({
-                prefix: ConfigProvider.get(ConfigParam.COMMAND_PREFIX)
-                , command: this.getName()
-            });
+            return MessageHelper.formatConfigInfo({ command: this.getName() });
         } else {
             return null;
         }

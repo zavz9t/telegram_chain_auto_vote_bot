@@ -3,9 +3,10 @@
 const { sprintf } = require(`sprintf-js`)
     , TelegramBot = require(`node-telegram-bot-api`)
     , AbstractChannel = require(`./AbstractChannel`)
+    , Tool = require(`../Tool`)
 ;
 
-module.exports = class TelegramChannel extends AbstractChannel {
+class TelegramChannel extends AbstractChannel {
 
     /**
      * @param {TelegramBot} bot
@@ -44,12 +45,14 @@ module.exports = class TelegramChannel extends AbstractChannel {
     /**
      * @inheritDoc
      */
-    async sendMessage(text) {
+    async sendMessage(text, options = {}) {
         return this.bot.sendMessage(
             this.getChatId()
             , text
-            , { parse_mode: `Markdown` }
+            , Tool.jsonCopy({ parse_mode: `Markdown` }, options)
         );
     }
 
-};
+}
+
+module.exports = TelegramChannel;

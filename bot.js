@@ -39,8 +39,9 @@ Promise.all([
 
     CommandHandler.register();
 
-    // Matches "/[whatever]", commands
-    bot.onText(/^\/(.+)$/, (msg, match) => {
+    // Matches any kind of text messages from user
+    bot.onText(/^(.+)$/, (msg, match) => {
+
         let parts = match[1].trim().split(` `);
 
         const command = parts[0]
@@ -68,12 +69,16 @@ Promise.all([
     //         })
     //     ;
     // });
-}).catch((err) => {
-    console.log(err);
+}).catch(err => {
+
+    console.error(err);
+    console.error(Tool.formatErrorMessage(
+        `\n\nFailed to initialize Config and/or Settings.\n\n`
+    ));
 
     // TODO: add close Mongo and Redis connection
 
-    throw new Error(`\n\nFailed to initialize Config and/or Settings.\n\n`);
+    process.exit(1);
 });
 
 

@@ -10,14 +10,14 @@ module.exports = class HelpCommand extends AbstractCommand {
      * @inheritDoc
      */
     static getName() {
-        return `help`;
+        return `/help`;
     }
 
     /**
      * @inheritDoc
      */
     static getAliases() {
-        return [`info`, `start`];
+        return [`/info`, `/start`];
     }
 
     /**

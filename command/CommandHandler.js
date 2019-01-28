@@ -9,11 +9,13 @@ const EventEmitter = require(`eventemitter3`)
     , HelpCommand = require(`./HelpCommand`)
     , ConfigCommand = require(`./ConfigCommand`)
     , SettingsCommand = require(`./SettingsCommand`)
+    , MenuCommand = require(`./MenuCommand`)
 ;
 
 const commandEmitter = new EventEmitter();
 
 module.exports = class CommandHandler {
+
     /**
      * Registers available commands
      */
@@ -24,6 +26,7 @@ module.exports = class CommandHandler {
             HelpCommand
             , ConfigCommand
             , SettingsCommand
+            , MenuCommand
         ];
         commands.forEach((command) => {
             command.register(commandEmitter);
@@ -37,11 +40,11 @@ module.exports = class CommandHandler {
      */
     static run(commandName, params, channel) {
         if (0 === commandEmitter.listenerCount(commandName)) {
+            // TODO : change this
             BotHelper.processMessageSend(
                 channel
                 , MessageHelper.formatUnsupportedCommand({
-                    prefix: ConfigProvider.get(ConfigParam.COMMAND_PREFIX)
-                    , command: commandName
+                    command: commandName
                 })
                 , `Failed to send "unsupportedCommand" message to user.`
             );
@@ -54,10 +57,7 @@ module.exports = class CommandHandler {
             if (err instanceof AccessDeniedError) {
                 BotHelper.processMessageSend(
                     channel
-                    , MessageHelper.formatAccessDenied({
-                        prefix: ConfigProvider.get(ConfigParam.COMMAND_PREFIX)
-                        , command: commandName
-                    })
+                    , MessageHelper.formatAccessDenied({ command: commandName })
                     , `Failed to send "accessDenied" message to user.`
                 );
 

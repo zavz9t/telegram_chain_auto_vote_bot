@@ -16,27 +16,22 @@ class MessageHelper {
     }
 
     /**
-     * @param {{ prefix: string, command: string }} options
+     * @param {{ command: string }} options
      *
      * @return {string}
      */
     static formatAccessDenied(options) {
-        return sprintf(
-            messages.accessDenied
-            , options.prefix
-            , options.command
-        );
+        return sprintf(messages.accessDenied, options.command);
     }
 
     /**
-     * @param {{ prefix: string, command: string }} options
+     * @param {{ command: string }} options
      *
      * @return {string}
      */
     static formatUnsupportedCommand(options) {
         return sprintf(
             messages.unsupportedCommand
-            , options.prefix
             , options.command
         );
     }
@@ -51,16 +46,13 @@ class MessageHelper {
     }
 
     /**
-     * @param {{ prefix: string, command: string }} options
+     * @param {{ command: string }} options
      *
      * @return {string}
      */
     static formatConfigInfo(options) {
-        return sprintf(
-            messages.configInfo
-            , options.prefix
-            , options.command
-        );
+        // TODO : print list of available config params and current value of it
+        return sprintf(messages.configInfo, options.command);
     }
 
     /**

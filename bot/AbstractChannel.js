@@ -13,10 +13,11 @@ module.exports = class AbstractChannel {
     /**
      * Sends given text to current channel
      * @param {string} text
+     * @param {Object} options
      *
      * @return {Promise}
      */
-    async sendMessage(text) {
+    async sendMessage(text, options = {}) {
         throw new Error(`Need to implement in subclasses.`);
     }
 

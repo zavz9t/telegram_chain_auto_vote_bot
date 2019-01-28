@@ -4,7 +4,6 @@
   "sentryDsn": "$SENTRY_DSN",
   "adminId": "$ADMIN_ID",
   "adminName": "Admin",
-  "commandPrefix": "/",
   "weight": 100,
   "minVp": 80
 }

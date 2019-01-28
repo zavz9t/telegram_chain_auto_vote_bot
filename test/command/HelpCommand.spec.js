@@ -34,7 +34,7 @@ describe(`HelpCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(stubChannel.sendMessage, messages.info);
+        sandbox.assert.calledWith(stubChannel.sendMessage, messages.info);
     });
 
     it(`should print info message by "info" alias`, () => {
@@ -52,7 +52,7 @@ describe(`HelpCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(stubChannel.sendMessage, messages.info);
+        sandbox.assert.calledWith(stubChannel.sendMessage, messages.info);
     });
 
     it(`should print info message by "start" alias`, () => {
@@ -70,7 +70,7 @@ describe(`HelpCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(stubChannel.sendMessage, messages.info);
+        sandbox.assert.calledWith(stubChannel.sendMessage, messages.info);
     });
 
 });

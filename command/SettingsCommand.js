@@ -22,7 +22,7 @@ class SettingsCommand extends AbstractCommand {
      * @inheritDoc
      */
     static getName() {
-        return `settings`;
+        return `/settings`;
     }
 
     /**

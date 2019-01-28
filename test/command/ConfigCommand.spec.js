@@ -36,12 +36,9 @@ describe(`ConfigCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(
+        sandbox.assert.calledWith(
             stubChannel.sendMessage
-            , MessageHelper.formatAccessDenied({
-                prefix: ConfigProvider.get(ConfigParam.COMMAND_PREFIX)
-                , command: commandName
-            })
+            , MessageHelper.formatAccessDenied({ command: commandName })
         );
 
         mockConfig.verify();
@@ -63,12 +60,9 @@ describe(`ConfigCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(
+        sandbox.assert.calledWith(
             stubChannel.sendMessage
-            , MessageHelper.formatConfigInfo({
-                prefix: ConfigProvider.get(ConfigParam.COMMAND_PREFIX)
-                , command: commandName
-            })
+            , MessageHelper.formatConfigInfo({ command: commandName })
         );
 
         mockConfig.verify();
@@ -91,7 +85,7 @@ describe(`ConfigCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(
+        sandbox.assert.calledWith(
             stubChannel.sendMessage
             , MessageHelper.formatConfigParamValue({
                 param: configParamName
@@ -119,7 +113,7 @@ describe(`ConfigCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(
+        sandbox.assert.calledWith(
             stubChannel.sendMessage
             , MessageHelper.formatConfigParamValue({
                 param: configParamName
@@ -171,7 +165,7 @@ describe(`ConfigCommand`, () => {
             sandbox.assert.calledOnce(stubChannel.getAuthorId);
             sandbox.assert.notCalled(stubChannel.getChatId);
             sandbox.assert.calledOnce(stubChannel.sendMessage);
-            sandbox.assert.calledWithExactly(
+            sandbox.assert.calledWith(
                 stubChannel.sendMessage
                 , MessageHelper.formatConfigParamValueChanged({
                     param: configParamName
@@ -213,7 +207,7 @@ describe(`ConfigCommand`, () => {
         sandbox.assert.calledOnce(stubChannel.getAuthorId);
         sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
-        sandbox.assert.calledWithExactly(
+        sandbox.assert.calledWith(
             stubChannel.sendMessage
             , sandbox.match(MessageHelper.formatConfigParamValueError({
                 param: configParamName
