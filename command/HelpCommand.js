@@ -5,7 +5,8 @@ const AbstractCommand = require(`./AbstractCommand`)
     , MessageHelper = require(`../helper/MessageHelper`)
 ;
 
-module.exports = class HelpCommand extends AbstractCommand {
+class HelpCommand extends AbstractCommand {
+
     /**
      * @inheritDoc
      */
@@ -17,7 +18,7 @@ module.exports = class HelpCommand extends AbstractCommand {
      * @inheritDoc
      */
     static getAliases() {
-        return [`/info`, `/start`];
+        return [`/info`, `/start`, `ℹ️ Information`];
     }
 
     /**
@@ -30,4 +31,6 @@ module.exports = class HelpCommand extends AbstractCommand {
             , `Failed to send "/help" message to user.`
         );
     }
-};
+}
+
+module.exports = HelpCommand;

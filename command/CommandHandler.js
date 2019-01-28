@@ -34,6 +34,16 @@ module.exports = class CommandHandler {
     }
 
     /**
+     * Checks whether specified command was registered or not
+     * @param {string} commandName
+     *
+     * @return {boolean}
+     */
+    static hasCommand(commandName) {
+        return commandEmitter.eventNames().includes(commandName);
+    }
+
+    /**
      * @param {string}          commandName
      * @param {Array}           params
      * @param {AbstractChannel} channel

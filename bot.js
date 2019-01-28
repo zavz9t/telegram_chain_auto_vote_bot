@@ -41,12 +41,18 @@ Promise.all([
 
     // Matches any kind of text messages from user
     bot.onText(/^(.+)$/, (msg, match) => {
+        const receivedText = match[1].trim()
+            , channel = new TelegramChannel(bot, msg)
+        ;
+        if (CommandHandler.hasCommand(receivedText)) {
+            CommandHandler.run(receivedText, [], channel);
 
-        let parts = match[1].trim().split(` `);
+            return;
+        }
 
+        let parts = receivedText.split(` `);
         const command = parts[0]
             , params = parts.splice(1)
-            , channel = new TelegramChannel(bot, msg)
         ;
 
         CommandHandler.run(command, params, channel);

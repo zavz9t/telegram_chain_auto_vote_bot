@@ -28,6 +28,13 @@ class SettingsCommand extends AbstractCommand {
     /**
      * @inheritDoc
      */
+    static getAliases() {
+        return [`⚙️ Settings`];
+    }
+
+    /**
+     * @inheritDoc
+     */
     static run(params, channel) {
         this[_infoMessageCase](params, channel.getAuthorId())
             .then((userMessage) => {
