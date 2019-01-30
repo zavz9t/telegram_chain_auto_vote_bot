@@ -25,6 +25,21 @@ class BotHelper {
         ;
     }
 
+    /**
+     * Formats options for message to display menu
+     * @param {Array} buttons
+     *
+     * @return {{reply_markup: string}}
+     */
+    static formatMessageMenuOptions(buttons) {
+        return {
+            reply_markup: JSON.stringify({
+                keyboard: buttons
+                , resize_keyboard: true
+            })
+        };
+    }
+
 }
 
 module.exports = BotHelper;

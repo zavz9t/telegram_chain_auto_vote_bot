@@ -2,13 +2,16 @@
 
 const { sprintf } = require(`sprintf-js`)
     , AbstractCommand = require(`./AbstractCommand`)
+    , AbstractChannel = require(`../bot/AbstractChannel`)
     , { ConfigProvider, ConfigParam } = require(`../config/index`)
     , { SettingsProvider } = require(`../settings/index`)
     // , ConfigValidator = require(`../config/ConfigValidator`)
     // , ConfigPreFormatter = require(`../config/ConfigPreFormatter`)
     // , ConfigPostFormatter = require(`../config/ConfigPostFormatter`)
     , BotHelper = require(`../bot/BotHelper`)
+    , MenuHelper = require(`../helper/MenuHelper`)
     , MessageHelper = require(`../helper/MessageHelper`)
+    , Tool = require(`../Tool`)
 ;
 
 // private methods
@@ -29,23 +32,24 @@ class SettingsCommand extends AbstractCommand {
      * @inheritDoc
      */
     static getAliases() {
-        return [`⚙️ Settings`];
+        return [MenuHelper.BUTTON_SETTINGS];
     }
 
     /**
      * @inheritDoc
      */
     static run(params, channel) {
-        this[_infoMessageCase](params, channel.getAuthorId())
-            .then((userMessage) => {
-                if (userMessage) {
-                    BotHelper.processMessageSend(
-                        channel
-                        , userMessage
-                        , `Failed to send result message of "settings" command to user.`
-                    );
-                }
-            });
+        this[_infoMessageCase](params, channel)
+            .then((result) => {
+
+            })
+            .catch(err => {
+                console.error(err);
+                console.error(Tool.formatErrorMessage(
+                    `Failed to handle SettingsCommand.\n`
+                ));
+            })
+        ;
         // if (null === userMessage) {
         //     userMessage = this.retrieveParameterValueCase(params);
         // }
@@ -78,14 +82,14 @@ class SettingsCommand extends AbstractCommand {
 
     /**
      * @param {string[]} params
-     * @param {string} userId Identifier of current user
+     * @param {AbstractChannel} channel Channel to communicate with user
      *
-     * @return {Promise<string|null>} List of user current settings, or null - another case
+     * @return {Promise<boolean>} True if it was info case, False - other one
      */
-    static async [_infoMessageCase](params, userId) {
+    static async [_infoMessageCase](params, channel) {
         if (params.length === 0) {
             const userSettings = await SettingsProvider.get(
-                    userId
+                    channel.getAuthorId()
                     , null
                     , ConfigProvider.getUserLevelItems()
                 )
@@ -99,11 +103,20 @@ class SettingsCommand extends AbstractCommand {
                     return obj;
                 }, {});
 
-            return MessageHelper.formatUserSettingsInfo({
-                settings: filteredSettings
-            });
+            BotHelper.processMessageSend(
+                channel
+                , MessageHelper.formatUserSettingsInfo({
+                    settings: filteredSettings
+                })
+                , `Failed to send result message of "settings" command to user.`
+                , BotHelper.formatMessageMenuOptions(
+                    MenuHelper.getSettingsMenuButtons()
+                )
+            );
+
+            return true;
         } else {
-            return null;
+            return false;
         }
     }
 

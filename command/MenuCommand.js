@@ -2,7 +2,7 @@
 
 const AbstractCommand = require(`./AbstractCommand`)
     , BotHelper = require(`../bot/BotHelper`)
-    , MessageHelper = require(`../helper/MessageHelper`)
+    , MenuHelper = require(`../helper/MenuHelper`)
 ;
 
 class MenuCommand extends AbstractCommand {
@@ -17,20 +17,19 @@ class MenuCommand extends AbstractCommand {
     /**
      * @inheritDoc
      */
+    static getAliases() {
+        return [MenuHelper.BUTTON_GO_BACK];
+    }
+
+    /**
+     * @inheritDoc
+     */
     static run(params, channel) {
         BotHelper.processMessageSend(
             channel
-            , `d`
+            , `/menu` // TODO : add here some info text
             , `Failed to send "/menu" message to user.`
-            , {
-                reply_markup: JSON.stringify({
-                    keyboard: [
-                        [`🛑 Stop`, `⚙️ Settings`, `🚀 Run`],
-                        [`🏃 Curators`, `ℹ️ Information`, `⭐ Favorites`],
-                    ]
-                    , resize_keyboard: true
-                })
-            }
+            , BotHelper.formatMessageMenuOptions(MenuHelper.getMainMenuButtons())
         );
     }
 }

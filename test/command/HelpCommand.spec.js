@@ -5,7 +5,6 @@ const faker = require(`faker`)
     , CommandHandler = require(`../../command/CommandHandler`)
     , TelegramChannel = require(`../../bot/TelegramChannel`)
     , messages = require(`../../messages`)
-    , commandName = `help`
 ;
 
 describe(`HelpCommand`, () => {
@@ -28,11 +27,9 @@ describe(`HelpCommand`, () => {
         stubChannel.sendMessage.resolves(true);
 
         // when
-        CommandHandler.run(commandName, [], stubChannel);
+        CommandHandler.run(`/help`, [], stubChannel);
 
         // then
-        sandbox.assert.calledOnce(stubChannel.getAuthorId);
-        sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
         sandbox.assert.calledWith(stubChannel.sendMessage, messages.info);
     });
@@ -46,11 +43,9 @@ describe(`HelpCommand`, () => {
         stubChannel.sendMessage.resolves(true);
 
         // when
-        CommandHandler.run(`info`, [], stubChannel);
+        CommandHandler.run(`/info`, [], stubChannel);
 
         // then
-        sandbox.assert.calledOnce(stubChannel.getAuthorId);
-        sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
         sandbox.assert.calledWith(stubChannel.sendMessage, messages.info);
     });
@@ -64,11 +59,9 @@ describe(`HelpCommand`, () => {
         stubChannel.sendMessage.resolves(true);
 
         // when
-        CommandHandler.run(`start`, [], stubChannel);
+        CommandHandler.run(`/start`, [], stubChannel);
 
         // then
-        sandbox.assert.calledOnce(stubChannel.getAuthorId);
-        sandbox.assert.notCalled(stubChannel.getChatId);
         sandbox.assert.calledOnce(stubChannel.sendMessage);
         sandbox.assert.calledWith(stubChannel.sendMessage, messages.info);
     });

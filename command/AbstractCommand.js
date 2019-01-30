@@ -36,10 +36,11 @@ module.exports = class AbstractCommand {
 
     /**
      * Checks whether user has access to perform current command
-     * @param {Array}           params
+     * @param {Array} params
      * @param {AbstractChannel} channel
+     * @param {string} commandName Name of command which was used
      */
-    static accessCheck(params, channel) {
+    static accessCheck(params, channel, commandName) {
         const userId = channel.getAuthorId();
         if (
             false === SecurityHelper.hasAccess(
@@ -50,7 +51,7 @@ module.exports = class AbstractCommand {
             throw new AccessDeniedError(sprintf(
                 `User (%s) has no access to perform "%s" command.`
                 , userId
-                , this.getName()
+                , commandName
             ));
         }
     }

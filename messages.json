@@ -7,6 +7,6 @@
   "configParamValue": "Current value of \"*%s*\" parameter is: *%s*",
   "configParamValueError": "Wrong new value of \"*%s*\" parameter. Errors: %s",
   "configParamValueChanged": "Value of \"*%s*\" parameter was changed successfully. New value: *%s*",
-  "userSettingsInfo": "Your current settings are:\n\n%s",
+  "userSettingsInfo": "Your current settings are:\n\n%s\n\nTo change them - use the buttons below 👇",
   "userSettingsInfoLine": "\t*%s* - `%s`"
 }

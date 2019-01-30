@@ -62,7 +62,7 @@ module.exports = class CommandHandler {
             return;
         }
         try {
-            commandEmitter.emit(commandName, params, channel);
+            commandEmitter.emit(commandName, params, channel, commandName);
         } catch (err) {
             if (err instanceof AccessDeniedError) {
                 BotHelper.processMessageSend(
